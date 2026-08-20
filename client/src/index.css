@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* === Design System Tokens (GetProven-inspired) === */
+@theme {
+  /* Primary */
+  --color-primary: #087A68;
+  --color-primary-dark: #05675C;
+  --color-primary-darker: #044A42;
+
+  /* Deep Navy (text) */
+  --color-navy: #161E24;
+
+  /* Accent */
+  --color-teal-highlight: #33B8A2;
+  --color-accent: #FF7629;
+  --color-accent-dark: #E56A1F;
+  --color-accent-darker: #CC5C1A;
+
+  /* Surfaces */
+  --color-surface: #FFFFFF;
+  --color-surface-teal: #CEE4E1;
+  --color-surface-input: #F5F5F5;
+  --color-surface-lavender: #F1E5EC;
+  --color-surface-peach: #FDDBC8;
+
+  /* Borders */
+  --color-border: #EAEAEA;
+  --color-border-teal: #CEE4E1;
+
+  /* Semantic */
+  --color-maroon: #75003D;
+  --color-error: #FFDEDE;
+
+  /* Shadows */
+  --shadow-card: 0px 4px 64px 0px rgba(22, 30, 36, 0.06);
+  --shadow-card-hover: 0px 8px 128px 0px rgba(22, 30, 36, 0.12);
+  --shadow-modal: 0px 12px 192px 0px rgba(22, 30, 36, 0.18);
+
+  /* Font families */
+  --font-heading: 'Cabinet Grotesk', 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    color: var(--color-navy);
+    background-color: var(--color-surface);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* === Rich Text (Blog Content) === */
+.rich-text {
+  font-size: 15px;
+}
+
+.rich-text p {
+  margin-bottom: 16px;
+  color: #292929;
+}
+
+.rich-text h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: #252525 !important;
+  margin: 32px 0;
+  font-family: var(--font-heading);
+}
+
+.rich-text h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #252525 !important;
+  margin: 24px 0;
+  font-family: var(--font-heading);
+}
+
+.rich-text h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333333 !important;
+  margin: 20px 0;
+  font-family: var(--font-heading);
+}
+
+.rich-text h4 {
+  font-size: 16px;
+  font-weight: 500;
+  color: #444444 !important;
+  margin: 16px 0;
+}
+
+.rich-text h5 {
+  font-size: 14px;
+  font-weight: 400;
+  color: #555555 !important;
+  margin: 12px 0;
+}
+
+.rich-text h6 {
+  font-size: 12px;
+  font-weight: 400;
+  color: #666666 !important;
+  margin: 8px 0;
+}
+
+.rich-text strong {
+  font-weight: 700;
+}
+
+.rich-text ol {
+  margin-left: 30px;
+  list-style-type: decimal;
+}
+
+.rich-text ul {
+  margin-left: 30px;
+  list-style-type: disc;
+}
+
+.rich-text li {
+  margin-bottom: 8px;
+}
+
+.rich-text a {
+  color: #087A68;
+}
+
+/* === Floating Avatar Animations === */
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes float-medium {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes float-fast {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-16px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 3.5s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 4s ease-in-out infinite;
+}
+
+/* === Quill Editor Override for Admin === */
+.ql-toolbar.ql-snow {
+  border-radius: 10px 10px 0 0 !important;
+  border-color: var(--color-border) !important;
+}
+
+.ql-container.ql-snow {
+  border-radius: 0 0 10px 10px !important;
+  border-color: var(--color-border) !important;
+  font-family: var(--font-body) !important;
+}
