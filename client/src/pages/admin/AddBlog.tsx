@@ -23,8 +23,32 @@ const AddBlog = () => {
   const [category, setCategory] = useState('Startup')
   const [isPublished, setIsPublished] = useState(false)
   
-  const generateContent = async () => {
+  const [isGenerating, setIsGenerating] = useState(false)
 
+  const generateContent = async () => {
+    if (!title) {
+      toast.error("Please enter a blog title first to generate content")
+      return
+    }
+
+    try {
+      setIsGenerating(true)
+      const { data } = await axios.post('/api/blog/generate', { title, subTitle })
+      
+      if (data.success && data.blocks) {
+        if (editorInstanceRef.current) {
+          // Replace or append to current content
+          await editorInstanceRef.current.render({ blocks: data.blocks })
+          toast.success("Content generated successfully!")
+        }
+      } else {
+        toast.error(data.message || "Failed to generate content")
+      }
+    } catch (error) {
+      toast.error((error as Error).message || "Error generating content")
+    } finally {
+      setIsGenerating(false)
+    }
   }
   
   
@@ -154,11 +178,12 @@ const AddBlog = () => {
                 className='editorjs-container min-h-[300px] bg-surface-input rounded-[10px] border border-border px-4 py-3 focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface transition-all'
               />
               <button 
-                className='mt-2 text-xs text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary-dark transition-colors cursor-pointer' 
+                className='mt-2 text-xs text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary-dark transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed' 
                 type='button' 
                 onClick={generateContent}
+                disabled={isGenerating}
               >
-                Generate with AI
+                {isGenerating ? 'Generating...' : 'Generate with AI'}
               </button>
             </div>
           </div>

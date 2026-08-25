@@ -169,3 +169,40 @@ export const getBlogComments = async (req: Request, res: Response): Promise<void
         res.json({success: false, message: (error as Error).message})
     }
 }
+
+export const generateAiContent = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { title, subTitle } = req.body
+        const aiUrl = process.env.AI_MICROSERVICE_URL
+
+        if (!aiUrl) {
+            res.json({ success: false, message: "AI Microservice URL is not configured." })
+            return
+        }
+
+        const response = await fetch(aiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, subTitle }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`AI Service responded with status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        
+        // Ensure we pass back 'blocks' (the structure Editor.js needs)
+        // If the AI microservice returns something else, we adapt it here.
+        if (data.blocks) {
+            res.json({ success: true, blocks: data.blocks })
+        } else {
+            res.json({ success: false, message: "Invalid format returned from AI service" })
+        }
+
+    } catch (error) {
+        res.json({ success: false, message: (error as Error).message })
+    }
+}

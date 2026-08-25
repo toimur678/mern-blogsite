@@ -4,11 +4,12 @@ import { BlogData, extractTextFromBlocks } from '../assets/assets'
 
 interface BlogCardProps {
   blog: BlogData
+  featured?: boolean
 }
 
-const BlogCard = ({blog}: BlogCardProps) => {
+const BlogCard = ({blog, featured = false}: BlogCardProps) => {
 
-  const {title, description, category, image, _id, createdAt} = blog;
+  const {title, description, image, _id, createdAt} = blog;
   const navigate = useNavigate();
 
   // Extract plain text from Editor.js blocks for preview
@@ -19,44 +20,52 @@ const BlogCard = ({blog}: BlogCardProps) => {
   return (
     <div 
       onClick={() => navigate(`/blog/${_id}`)} 
-      className='bg-surface rounded-[20px] overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 shadow-card hover:shadow-card-hover'
+      className={`relative overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 shadow-card hover:shadow-card-hover rounded-[24px] 
+        bg-white/40 backdrop-blur-lg border border-white/30 
+        ${featured ? 'md:col-span-2 md:row-span-2' : ''}`}
     >
       {/* Image */}
-      <div className='overflow-hidden rounded-[20px]'>
+      <div className={`overflow-hidden ${featured ? 'aspect-[16/9] md:aspect-auto md:h-[320px]' : 'aspect-video'}`}>
         <img 
-          className='w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-105' 
+          className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-105' 
           src={image} 
           alt={title} 
         />
       </div>
 
       {/* Content */}
-      <div className='p-7'>
+      <div className={`p-6 sm:p-8 ${featured ? 'md:p-10' : ''}`}>
         {/* Meta Row */}
         <div className='flex items-center gap-3 mb-4'>
-          <span className='bg-surface-teal text-primary text-xs font-medium uppercase px-4 py-2 rounded-md tracking-wide leading-[14.4px]'>
+          <span className='bg-white/60 backdrop-blur-md border border-white/50 text-primary text-xs font-medium uppercase px-4 py-2 rounded-full tracking-wide'>
             {createdAt ? Moment(createdAt).format('MMM DD, YYYY') : 'Draft'}
           </span>
-          <span className='text-xs text-[#333] font-normal'>
+          <span className='text-xs text-[#333]/80 font-medium'>
             {readTime} min read
           </span>
         </div>
 
         {/* Title */}
-        <h3 className='font-heading text-2xl font-bold text-navy leading-8 mb-3 line-clamp-2'>
+        <h3 className={`font-heading font-bold text-navy mb-3 line-clamp-2 transition-colors group-hover:text-primary 
+          ${featured ? 'text-2xl md:text-3xl lg:text-[40px] leading-tight mb-4' : 'text-2xl leading-8'}`}>
           {title}
         </h3>
 
         {/* Description Preview (plain text, no HTML) */}
-        <p className='text-base text-[#333333] leading-6 mb-4 line-clamp-2'>
-          {plainText.slice(0, 120)}
+        <p className={`text-[#333333]/80 leading-relaxed mb-6 line-clamp-2
+          ${featured ? 'text-lg md:text-xl' : 'text-base'}`}>
+          {plainText.slice(0, featured ? 180 : 120)}...
         </p>
 
         {/* Read More */}
-        <span className='text-primary text-base font-semibold italic cursor-pointer group-hover:text-primary-dark transition-colors'>
-          Read More <span className='not-italic'>›</span>
+        <span className='inline-flex items-center gap-2 text-primary font-semibold transition-colors group-hover:text-primary-dark'>
+          Read More 
+          <span className='text-xl leading-none transition-transform group-hover:translate-x-1'>›</span>
         </span>
       </div>
+      
+      {/* Subtle Glow Effect */}
+      <div className='absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-500' />
     </div>
   )
 }
