@@ -4,11 +4,24 @@ export const assets = {
     upload_area,
 }
 
+// Editor.js block types
+export interface EditorBlock {
+    id?: string
+    type: string
+    data: Record<string, unknown>
+}
+
+export interface EditorOutputData {
+    time?: number
+    blocks: EditorBlock[]
+    version?: string
+}
+
 export interface BlogData {
     _id: string
     title: string
     subTitle?: string
-    description: string
+    description: EditorOutputData
     category: string
     image: string
     isPublished: boolean
@@ -46,7 +59,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6805ee7dd8f584af5da78d37",
         "title": "A detailed step by step guide to manage your lifestyle",
-        "description": "<h1>A Simple Step-by-Step Guide to Managing Your Lifestyle</h1><p>If you're looking to improve your health, boost productivity, and create a balanced life, managing your lifestyle intentionally is key.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "A Simple Step-by-Step Guide to Managing Your Lifestyle", "level": 1 } },
+                { "type": "paragraph", "data": { "text": "If you're looking to improve your health, boost productivity, and create a balanced life, managing your lifestyle intentionally is key." } }
+            ]
+        },
         "category": "Lifestyle",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Lifestyle",
         "createdAt": "2025-04-21T07:06:37.508Z",
@@ -58,7 +76,11 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6805ef08d8f584af5da78d39",
         "title": "How to create an effective startup roadmap or ideas",
-        "description": "<p>Creating an effective <strong>startup roadmap</strong> helps you turn an idea into a structured, actionable plan.</p>",
+        "description": {
+            "blocks": [
+                { "type": "paragraph", "data": { "text": "Creating an effective startup roadmap helps you turn an idea into a structured, actionable plan." } }
+            ]
+        },
         "category": "Startup",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Startup",
         "createdAt": "2025-04-21T07:08:56.214Z",
@@ -70,7 +92,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6805f2aad8f584af5da78d3b",
         "title": "Learning new technology to boost your career in software",
-        "description": "<h1>Learning New Tech to Boost Your Software Career</h1><p>In tech, staying still means falling behind.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "Learning New Tech to Boost Your Software Career", "level": 1 } },
+                { "type": "paragraph", "data": { "text": "In tech, staying still means falling behind." } }
+            ]
+        },
         "category": "Technology",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Technology",
         "createdAt": "2025-04-21T07:24:26.853Z",
@@ -82,7 +109,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6805f2e2d8f584af5da78d3d",
         "title": "Tips for getting the most out of apps and software",
-        "description": "<h1>Tips for Getting the Most Out of Apps and Software</h1><p>We use tons of apps daily—but most people only scratch the surface.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "Tips for Getting the Most Out of Apps and Software", "level": 1 } },
+                { "type": "paragraph", "data": { "text": "We use tons of apps daily — but most people only scratch the surface." } }
+            ]
+        },
         "category": "Technology",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Apps",
         "createdAt": "2025-04-21T07:25:22.362Z",
@@ -94,7 +126,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6805f307d8f584af5da78d3f",
         "title": "Enhancing your skills and capturing memorable moments",
-        "description": "<h1>Enhancing Your Skills and Capturing Memorable Moments</h1><p>In today's fast-paced world, personal growth and preserving memories go hand in hand.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "Enhancing Your Skills and Capturing Memorable Moments", "level": 1 } },
+                { "type": "paragraph", "data": { "text": "In today's fast-paced world, personal growth and preserving memories go hand in hand." } }
+            ]
+        },
         "category": "Lifestyle",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Skills",
         "createdAt": "2025-04-21T07:25:59.789Z",
@@ -106,7 +143,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6805f324d8f584af5da78d41",
         "title": "Maximizing returns by minimizing resources in your startup",
-        "description": "<h1>Maximizing Returns by Minimizing Resources in Your Startup</h1><p>Startups thrive not by having the most, but by using the least for the most impact.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "Maximizing Returns by Minimizing Resources in Your Startup", "level": 1 } },
+                { "type": "paragraph", "data": { "text": "Startups thrive not by having the most, but by using the least for the most impact." } }
+            ]
+        },
         "category": "Startup",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Startup",
         "createdAt": "2025-04-21T07:26:28.058Z",
@@ -118,7 +160,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "68062afc8474108ecb7d7944",
         "title": "Taxes on Luxury Houses",
-        "description": "<h2>Luxury Home Taxes: Are They Fair, and What Do They Mean for the Market?</h2><p>Luxury homes. The pinnacle of real estate.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "Luxury Home Taxes: Are They Fair, and What Do They Mean for the Market?", "level": 2 } },
+                { "type": "paragraph", "data": { "text": "Luxury homes. The pinnacle of real estate." } }
+            ]
+        },
         "category": "Finance",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Finance",
         "createdAt": "2025-04-21T11:24:44.773Z",
@@ -130,7 +177,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6809f9f23e075dbeedd23bca",
         "title": "The New Way of Study",
-        "description": "<h2>The New Way of Study: Ditching the Old, Embracing the Now</h2><p>For years, the image of studying has been synonymous with late nights.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "The New Way of Study: Ditching the Old, Embracing the Now", "level": 2 } },
+                { "type": "paragraph", "data": { "text": "For years, the image of studying has been synonymous with late nights." } }
+            ]
+        },
         "category": "Finance",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Study",
         "isPublished": true,
@@ -142,7 +194,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6810995bb5fd81dd0c923d5b",
         "title": "Importance of Tourism",
-        "description": "<h2>Beyond Postcards: Why Tourism Matters More Than You Think</h2><p>Tourism is a powerhouse.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "Beyond Postcards: Why Tourism Matters More Than You Think", "level": 2 } },
+                { "type": "paragraph", "data": { "text": "Tourism is a powerhouse." } }
+            ]
+        },
         "category": "Lifestyle",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Tourism",
         "isPublished": true,
@@ -154,7 +211,12 @@ export const blog_data: BlogData[] = [
     {
         "_id": "6810a6a2ed57ecc68a99abb3",
         "title": "AI best practices in healthcare",
-        "description": "<h2>AI Best Practices in Healthcare: Navigating the Future Responsibly</h2><p>AI is rapidly transforming healthcare.</p>",
+        "description": {
+            "blocks": [
+                { "type": "header", "data": { "text": "AI Best Practices in Healthcare: Navigating the Future Responsibly", "level": 2 } },
+                { "type": "paragraph", "data": { "text": "AI is rapidly transforming healthcare." } }
+            ]
+        },
         "category": "Lifestyle",
         "image": "https://placehold.co/800x450/CEE4E1/087A68?text=Healthcare",
         "isPublished": true,
@@ -239,3 +301,18 @@ export const footer_data: FooterSection[] = [
           links: ["Twitter", "LinkedIn", "GitHub", "YouTube"]
       }
   ];
+
+/**
+ * Extract plain text from Editor.js output data (for previews and reading time)
+ */
+export function extractTextFromBlocks(description: EditorOutputData): string {
+    if (!description?.blocks) return ''
+    return description.blocks
+        .map(block => {
+            if (typeof block.data.text === 'string') return block.data.text
+            if (Array.isArray(block.data.items)) return (block.data.items as string[]).join(' ')
+            return ''
+        })
+        .filter(Boolean)
+        .join(' ')
+}

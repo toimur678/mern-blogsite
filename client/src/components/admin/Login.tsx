@@ -1,10 +1,11 @@
 import { useState, FormEvent } from 'react'
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
+import { UserRole } from '../../context/AppContext';
 
 const Login = () => {
 
-  const {axios, setIsLoggedIn} = useAppContext()
+  const {axios, setIsLoggedIn, setUserRole} = useAppContext()
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
@@ -16,6 +17,7 @@ const Login = () => {
 
         if(data.success) {
           setIsLoggedIn(true)
+          setUserRole(data.role as UserRole)
         } else {
           toast.error(data.message)
         }

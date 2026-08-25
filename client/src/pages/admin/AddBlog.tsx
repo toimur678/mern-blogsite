@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, FormEvent, ChangeEvent } from 'react'
 import { assets, blogCategories } from '../../assets/assets'
-import Quill from 'quill'
+import EditorJS from '@editorjs/editorjs'
+import Header from '@editorjs/header'
+import List from '@editorjs/list'
+import Quote from '@editorjs/quote'
+import Delimiter from '@editorjs/delimiter'
+import InlineCode from '@editorjs/inline-code'
 import { useAppContext } from '../../context/AppContext'
 import toast from 'react-hot-toast'
 
@@ -10,8 +15,7 @@ const AddBlog = () => {
   const [isAdding, setIsAdding] = useState(false)
 
   const editorRef = useRef<HTMLDivElement>(null)
-  const quillRef = useRef<Quill | null>(null)
-
+  const editorInstanceRef = useRef<EditorJS | null>(null)
 
   const [image, setImage] = useState<File | false>(false)
   const [title, setTitle] = useState('')
@@ -29,8 +33,17 @@ const AddBlog = () => {
       e.preventDefault();
       setIsAdding(true)
 
+      // Get Editor.js content as JSON
+      const editorData = await editorInstanceRef.current?.save()
+
+      if (!editorData || editorData.blocks.length === 0) {
+        toast.error('Please add some content to the blog')
+        setIsAdding(false)
+        return
+      }
+
       const blog = {
-        title, subTitle, description: quillRef.current?.root.innerHTML ?? '', category, isPublished
+        title, subTitle, description: editorData, category, isPublished
       }
 
       const formData = new FormData()
@@ -44,10 +57,10 @@ const AddBlog = () => {
         toast.success(data.message)
         setImage(false)
         setTitle('')
-        if (quillRef.current) {
-          quillRef.current.root.innerHTML = ''
-        }
+        setSubTitle('')
+        editorInstanceRef.current?.clear()
         setCategory('Startup')
+        setIsPublished(false)
       } else {
         toast.error(data.message)
       }
@@ -59,9 +72,40 @@ const AddBlog = () => {
   }
   
   useEffect(() => {
-    //Initiate quill only once
-    if(!quillRef.current && editorRef.current) {
-      quillRef.current = new Quill(editorRef.current, {theme: 'snow'})
+    // Initialize Editor.js only once
+    if(!editorInstanceRef.current && editorRef.current) {
+      editorInstanceRef.current = new EditorJS({
+        holder: editorRef.current,
+        placeholder: 'Start writing your blog content...',
+        tools: {
+          header: {
+            class: Header as unknown as EditorJS.ToolConstructable,
+            config: {
+              levels: [1, 2, 3, 4],
+              defaultLevel: 2,
+            }
+          },
+          list: {
+            class: List as unknown as EditorJS.ToolConstructable,
+            inlineToolbar: true,
+          },
+          quote: {
+            class: Quote as unknown as EditorJS.ToolConstructable,
+            inlineToolbar: true,
+          },
+          delimiter: Delimiter as unknown as EditorJS.ToolConstructable,
+          inlineCode: {
+            class: InlineCode as unknown as EditorJS.ToolConstructable,
+          },
+        },
+      })
+    }
+
+    return () => {
+      if (editorInstanceRef.current?.destroy) {
+        editorInstanceRef.current.destroy()
+        editorInstanceRef.current = null
+      }
     }
   }, []);
   
@@ -104,9 +148,18 @@ const AddBlog = () => {
 
           <div>
             <label className='text-sm font-medium text-navy'>Blog Description</label>
-            <div className='max-w-lg h-74 pb-16 sm:pb-10 pt-2 relative'>
-              <div ref={editorRef}></div>
-              <button className='absolute bottom-1 right-2 ml-2 text-xs text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary-dark transition-colors cursor-pointer' type='button' onClick={generateContent}>Generate with AI</button>
+            <div className='max-w-lg mt-2 relative'>
+              <div 
+                ref={editorRef} 
+                className='editorjs-container min-h-[300px] bg-surface-input rounded-[10px] border border-border px-4 py-3 focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface transition-all'
+              />
+              <button 
+                className='mt-2 text-xs text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary-dark transition-colors cursor-pointer' 
+                type='button' 
+                onClick={generateContent}
+              >
+                Generate with AI
+              </button>
             </div>
           </div>
 

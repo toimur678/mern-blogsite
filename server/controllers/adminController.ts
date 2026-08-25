@@ -7,12 +7,23 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
     try {
         const {email, password} = req.body
 
-        if (email != process.env.ADMIN_EMAIL || password != process.env.ADMIN_PASSWORD) {
+        let role: 'admin' | 'editor' | null = null
+
+        // Check admin credentials
+        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+            role = 'admin'
+        }
+        // Check editor credentials
+        else if (email === process.env.EDITOR_EMAIL && password === process.env.EDITOR_PASSWORD) {
+            role = 'editor'
+        }
+
+        if (!role) {
             res.json({success: false, message: "Invalid Credentials"})
             return
         }
 
-        const token = jwt.sign({email}, process.env.JWT_SECRET as string)
+        const token = jwt.sign({email, role}, process.env.JWT_SECRET as string)
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -21,7 +32,7 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         })
 
-        res.json({success: true})
+        res.json({success: true, role})
     } catch(error) {
         res.json({success: false, message: (error as Error).message})
     }
@@ -41,9 +52,9 @@ export const adminLogout = async (_req: Request, res: Response): Promise<void> =
     }
 }
 
-export const checkAuth = async (_req: Request, res: Response): Promise<void> => {
+export const checkAuth = async (req: Request, res: Response): Promise<void> => {
     // If this handler runs, the request already passed the auth middleware
-    res.json({success: true})
+    res.json({success: true, role: req.user?.role})
 }
 
 export const getAllBlogsAdmin = async (_req: Request, res: Response): Promise<void> => {

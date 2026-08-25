@@ -14,7 +14,7 @@ const CommentTableItem = ({comment, fetchComments}: CommentTableItemProps) => {
   const {blog, createdAt, _id} = comment
   const BlogDate = new Date(createdAt)
 
-  const {axios} = useAppContext()
+  const {axios, userRole} = useAppContext()
   const approveComment = async () => {
     try {
       const {data} = await axios.post('/api/admin/approve-comment', {id: _id})
@@ -62,18 +62,29 @@ const CommentTableItem = ({comment, fetchComments}: CommentTableItemProps) => {
 
       <td className='px-6 py-5'>
         <div className='inline-flex items-center gap-4'>
-            {
-              !comment.isApproved
-              ?
-              <button onClick={approveComment} className='p-1.5 rounded-lg hover:bg-surface-teal text-primary/60 hover:text-primary transition-all cursor-pointer'>
-                <Check className='w-5 h-5' />
-              </button>
-              :
-              <span className='text-xs bg-surface-teal text-primary font-medium rounded-md px-3 py-1.5'>Approved</span> 
-            }
-            <button onClick={deleteComment} className='p-1.5 rounded-lg hover:bg-red-50 text-[#333]/60 hover:text-red-500 transition-all cursor-pointer'>
-              <Trash2 className='w-4 h-4' />
-            </button>
+            {/* Only admin can approve/delete comments */}
+            {userRole === 'admin' ? (
+              <>
+                {!comment.isApproved ? (
+                  <button onClick={approveComment} className='p-1.5 rounded-lg hover:bg-surface-teal text-primary/60 hover:text-primary transition-all cursor-pointer'>
+                    <Check className='w-5 h-5' />
+                  </button>
+                ) : (
+                  <span className='text-xs bg-surface-teal text-primary font-medium rounded-md px-3 py-1.5'>Approved</span> 
+                )}
+                <button onClick={deleteComment} className='p-1.5 rounded-lg hover:bg-red-50 text-[#333]/60 hover:text-red-500 transition-all cursor-pointer'>
+                  <Trash2 className='w-4 h-4' />
+                </button>
+              </>
+            ) : (
+              <span className={`text-xs font-medium rounded-md px-3 py-1.5 ${
+                comment.isApproved 
+                  ? 'bg-surface-teal text-primary' 
+                  : 'bg-accent/10 text-accent'
+              }`}>
+                {comment.isApproved ? 'Approved' : 'Pending'}
+              </span>
+            )}
         </div>
       </td>
     </tr>

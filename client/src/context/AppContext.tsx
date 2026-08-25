@@ -7,11 +7,15 @@ import { BlogData } from "../assets/assets"
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL
 axios.defaults.withCredentials = true
 
+export type UserRole = 'admin' | 'editor' | null
+
 interface AppContextType {
     axios: typeof axios
     navigate: NavigateFunction
     isLoggedIn: boolean
     setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>
+    userRole: UserRole
+    setUserRole: React.Dispatch<React.SetStateAction<UserRole>>
     blogs: BlogData[]
     setBlogs: React.Dispatch<React.SetStateAction<BlogData[]>>
     input: string
@@ -28,6 +32,7 @@ export const AppProvider = ({children}: AppProviderProps) => {
 
     const navigate = useNavigate()
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+    const [userRole, setUserRole] = useState<UserRole>(null)
     const [blogs, setBlogs] = useState<BlogData[]>([])
     const [input, setInput] = useState<string>("")
 
@@ -45,6 +50,7 @@ export const AppProvider = ({children}: AppProviderProps) => {
             const { data } = await axios.get('/api/admin/check-auth')
             if (data.success) {
                 setIsLoggedIn(true)
+                setUserRole(data.role)
             }
         } catch {
             // Not authenticated — silently ignore
@@ -56,7 +62,7 @@ export const AppProvider = ({children}: AppProviderProps) => {
         checkAuth()
     }, [])
 
-    const value: AppContextType = {axios, navigate, isLoggedIn, setIsLoggedIn, blogs, setBlogs, input, setInput}
+    const value: AppContextType = {axios, navigate, isLoggedIn, setIsLoggedIn, userRole, setUserRole, blogs, setBlogs, input, setInput}
     
     return (
         <AppContext.Provider value={value}>

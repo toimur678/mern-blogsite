@@ -14,7 +14,7 @@ const BlogTableItem = ({blog, fetchBlogs, index}: BlogTableItemProps) => {
   const { title, createdAt} = blog
   const BlogDate = new Date(createdAt)
 
-  const {axios} = useAppContext()
+  const {axios, userRole} = useAppContext()
   const deleteBlog = async () => {
     const confirm = window.confirm("Are you sure you want to delete this blog?")
     if(!confirm) return;
@@ -67,9 +67,12 @@ const BlogTableItem = ({blog, fetchBlogs, index}: BlogTableItemProps) => {
             >
               {blog.isPublished ? 'Unpublish': 'Publish'}
             </button>
-            <button onClick={deleteBlog} className='p-1.5 rounded-lg hover:bg-red-50 text-[#333]/60 hover:text-red-500 transition-all cursor-pointer'>
-              <X className='w-5 h-5' />
-            </button>
+            {/* Only admin can delete blogs */}
+            {userRole === 'admin' && (
+              <button onClick={deleteBlog} className='p-1.5 rounded-lg hover:bg-red-50 text-[#333]/60 hover:text-red-500 transition-all cursor-pointer'>
+                <X className='w-5 h-5' />
+              </button>
+            )}
         </td>
       
     </tr>

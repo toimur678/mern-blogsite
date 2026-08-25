@@ -3,12 +3,13 @@ import Sidebar from '../../components/admin/Sidebar';
 import { useAppContext } from '../../context/AppContext';
 
 const Layout = () => {
-  const { axios, setIsLoggedIn, navigate } = useAppContext()
+  const { axios, setIsLoggedIn, setUserRole, navigate, userRole } = useAppContext()
 
   const logout = async () => {
     try {
       await axios.post('/api/admin/logout')
       setIsLoggedIn(false)
+      setUserRole(null)
       navigate('/')
     } catch (error) {
       console.error('Logout failed:', error)
@@ -25,12 +26,23 @@ const Layout = () => {
         >
           Tech<span className='text-primary'>Everyday</span>
         </h1>
-        <button 
-          onClick={logout} 
-          className='text-sm px-6 py-2.5 bg-primary text-white font-semibold rounded-lg cursor-pointer hover:bg-primary-dark transition-colors'
-        >
-          Logout
-        </button>
+        <div className='flex items-center gap-4'>
+          {userRole && (
+            <span className={`text-xs font-semibold uppercase px-3 py-1.5 rounded-md ${
+              userRole === 'admin' 
+                ? 'bg-surface-teal text-primary' 
+                : 'bg-surface-peach text-accent'
+            }`}>
+              {userRole}
+            </span>
+          )}
+          <button 
+            onClick={logout} 
+            className='text-sm px-6 py-2.5 bg-primary text-white font-semibold rounded-lg cursor-pointer hover:bg-primary-dark transition-colors'
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className='flex h-[calc(100vh-70px)]'>

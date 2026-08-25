@@ -3,6 +3,49 @@ import fs from 'fs'
 import imagekit from '../configs/imageKit.js'
 import Blog from '../models/Blog.js'
 import Comment from '../models/Comment.js'
+import { EditorOutputData, EditorBlock } from '../models/Blog.js'
+
+// Allowed Editor.js block types — reject any unknown types to prevent injection
+const ALLOWED_BLOCK_TYPES = new Set([
+    'paragraph', 'header', 'list', 'quote', 'delimiter', 'inlineCode'
+])
+
+/**
+ * Sanitizes Editor.js output data:
+ * - Strips unknown block types
+ * - Removes HTML tags from text fields to prevent stored XSS
+ */
+function sanitizeEditorData(data: EditorOutputData): EditorOutputData {
+    const sanitizedBlocks: EditorBlock[] = data.blocks
+        .filter(block => ALLOWED_BLOCK_TYPES.has(block.type))
+        .map(block => {
+            const sanitized = { ...block, data: { ...block.data } }
+
+            // Strip HTML tags from text fields
+            if (typeof sanitized.data.text === 'string') {
+                sanitized.data.text = stripHtmlTags(sanitized.data.text)
+            }
+
+            // Sanitize list items
+            if (Array.isArray(sanitized.data.items)) {
+                sanitized.data.items = (sanitized.data.items as string[]).map(item =>
+                    typeof item === 'string' ? stripHtmlTags(item) : item
+                )
+            }
+
+            return sanitized
+        })
+
+    return {
+        time: data.time,
+        blocks: sanitizedBlocks,
+        version: data.version,
+    }
+}
+
+function stripHtmlTags(str: string): string {
+    return str.replace(/<[^>]*>/g, '')
+}
 
 export const addBlog = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -10,11 +53,19 @@ export const addBlog = async (req: Request, res: Response): Promise<void> => {
 
         const imageFile = req.file
 
-        // Check if all credits are present
+        // Check if all fields are present
         if(!title || !description || !category || !imageFile) {
             res.json({success: false, message: "Missing required fields"})
             return
         }
+
+        // Validate and sanitize Editor.js JSON
+        if (!description.blocks || !Array.isArray(description.blocks)) {
+            res.json({success: false, message: "Invalid description format"})
+            return
+        }
+
+        const sanitizedDescription = sanitizeEditorData(description as EditorOutputData)
 
         const fileBuffer = fs.readFileSync(imageFile.path)
 
@@ -37,7 +88,7 @@ export const addBlog = async (req: Request, res: Response): Promise<void> => {
         
         const image = optimizedImageUrl
 
-        await Blog.create({title, subTitle, description, category, image, isPublished})
+        await Blog.create({title, subTitle, description: sanitizedDescription, category, image, isPublished})
 
         res.json({success: true, message: "Blog added successfully"})
 

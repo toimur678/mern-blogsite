@@ -10,12 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@editorjs/delimiter": "^1.4.2",
+    "@editorjs/editorjs": "^2.30.8",
+    "@editorjs/header": "^2.8.8",
+    "@editorjs/inline-code": "^1.5.1",
+    "@editorjs/list": "^2.0.2",
+    "@editorjs/quote": "^2.7.6",
     "@tailwindcss/vite": "^4.1.13",
     "axios": "^1.12.2",
     "lucide-react": "^1.33.0",
     "moment": "^2.30.1",
     "motion": "^12.23.12",
-    "quill": "^2.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",

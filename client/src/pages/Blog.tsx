@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Moment from 'moment'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader';
+import EditorRenderer from '../components/EditorRenderer';
 import { useAppContext } from '../context/AppContext';
 import toast from 'react-hot-toast';
 import { BlogData } from '../assets/assets';
@@ -39,7 +40,6 @@ const Blog = () => {
   const fetchComments = async () => {
     try {
       const {data} = await axios.post('/api/blog/comments', {blogId: id})
-      console.log(data.comments)
       if(data.success) {
         setComments(data.comments)
       } else {
@@ -104,9 +104,9 @@ const Blog = () => {
         {/* Featured Image */}
         <img className='w-full rounded-[20px] mb-10' src={data.image} alt={data.title} />
 
-        {/* Rich Text Content */}
-        <div className='rich-text max-w-3xl mx-auto'>
-          <div dangerouslySetInnerHTML={{__html: data.description}}></div>
+        {/* Rich Text Content — Safe JSON Renderer */}
+        <div className='max-w-3xl mx-auto'>
+          <EditorRenderer data={data.description} />
         </div>
 
         {/* Comment Section */}

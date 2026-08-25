@@ -56,7 +56,7 @@
   display: none;
 }
 
-/* === Rich Text (Blog Content) === */
+/* === Rich Text (Blog Content via EditorRenderer) === */
 .rich-text {
   font-size: 15px;
 }
@@ -182,14 +182,40 @@
   animation: float-fast 4s ease-in-out infinite;
 }
 
-/* === Quill Editor Override for Admin === */
-.ql-toolbar.ql-snow {
-  border-radius: 10px 10px 0 0 !important;
-  border-color: var(--color-border) !important;
+/* === Editor.js Container Styling === */
+.editorjs-container .codex-editor__redactor {
+  padding-bottom: 100px !important;
 }
 
-.ql-container.ql-snow {
-  border-radius: 0 0 10px 10px !important;
-  border-color: var(--color-border) !important;
-  font-family: var(--font-body) !important;
+.editorjs-container .ce-block__content {
+  max-width: 100%;
+  margin: 0;
+}
+
+.editorjs-container .ce-toolbar__content {
+  max-width: 100%;
+  margin: 0;
+}
+
+.editorjs-container .ce-toolbar__plus,
+.editorjs-container .ce-toolbar__actions {
+  color: var(--color-primary);
+}
+
+.editorjs-container .ce-paragraph {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-navy);
+}
+
+.editorjs-container .ce-header {
+  font-family: var(--font-heading);
+  color: var(--color-navy);
+}
+
+.editorjs-container .cdx-quote__text {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 12px;
+  font-style: italic;
 }

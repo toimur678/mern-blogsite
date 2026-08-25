@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import Moment from 'moment'
-import { BlogData } from '../assets/assets'
+import { BlogData, extractTextFromBlocks } from '../assets/assets'
 
 interface BlogCardProps {
   blog: BlogData
@@ -11,8 +11,8 @@ const BlogCard = ({blog}: BlogCardProps) => {
   const {title, description, category, image, _id, createdAt} = blog;
   const navigate = useNavigate();
 
-  // Estimate reading time (avg 200 words/min)
-  const plainText = description ? description.replace(/<[^>]*>/g, '') : '';
+  // Extract plain text from Editor.js blocks for preview
+  const plainText = extractTextFromBlocks(description)
   const wordCount = plainText.split(/\s+/).filter(Boolean).length;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
@@ -47,8 +47,10 @@ const BlogCard = ({blog}: BlogCardProps) => {
           {title}
         </h3>
 
-        {/* Description */}
-        <p className='text-base text-[#333333] leading-6 mb-4 line-clamp-2' dangerouslySetInnerHTML={{"__html": description.slice(0, 120)}}></p>
+        {/* Description Preview (plain text, no HTML) */}
+        <p className='text-base text-[#333333] leading-6 mb-4 line-clamp-2'>
+          {plainText.slice(0, 120)}
+        </p>
 
         {/* Read More */}
         <span className='text-primary text-base font-semibold italic cursor-pointer group-hover:text-primary-dark transition-colors'>
