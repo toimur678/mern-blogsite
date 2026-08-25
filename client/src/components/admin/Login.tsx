@@ -31,7 +31,7 @@ const Login = () => {
       <div className='w-full max-w-md p-8 mx-6 bg-surface rounded-[20px] shadow-card-hover'>
         <div className='text-center mb-8'>
           <h1 className='font-heading text-3xl font-bold text-navy mb-2'>
-            Tech<span className='text-primary'>Everyday</span>
+            LittleTech<span className='text-primary'>Tips</span>
           </h1>
           <p className='text-sm text-[#333]/60'>Sign in to access the admin panel</p>
         </div>
@@ -45,7 +45,7 @@ const Login = () => {
               className='w-full h-[44px] bg-surface-input text-navy placeholder:text-navy/50 rounded-[10px] px-4 text-base outline-none focus:bg-surface focus:ring-2 focus:ring-primary transition-all' 
               type="email" 
               required 
-              placeholder='admin@techeveryday.com'
+              placeholder='admin@littletechtips.com'
             />
           </div>
           

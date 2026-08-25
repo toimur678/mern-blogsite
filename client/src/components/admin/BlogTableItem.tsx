@@ -1,7 +1,8 @@
-import { X } from 'lucide-react';
+import { X, Edit3 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 import { BlogData } from '../../assets/assets';
+import { useNavigate } from 'react-router-dom';
 
 interface BlogTableItemProps {
   blog: BlogData
@@ -10,7 +11,7 @@ interface BlogTableItemProps {
 }
 
 const BlogTableItem = ({blog, fetchBlogs, index}: BlogTableItemProps) => {
-  
+  const navigate = useNavigate();
   const { title, createdAt} = blog
   const BlogDate = new Date(createdAt)
 
@@ -66,6 +67,9 @@ const BlogTableItem = ({blog, fetchBlogs, index}: BlogTableItemProps) => {
               className='px-3 py-1.5 rounded-lg border border-border text-[#333] hover:border-primary hover:text-primary transition-colors cursor-pointer'
             >
               {blog.isPublished ? 'Unpublish': 'Publish'}
+            </button>
+            <button onClick={() => navigate('/admin/editBlog/' + blog._id)} className='p-1.5 rounded-lg hover:bg-surface-teal text-[#333]/60 hover:text-primary transition-all cursor-pointer'>
+              <Edit3 className='w-5 h-5' />
             </button>
             {/* Only admin can delete blogs */}
             {userRole === 'admin' && (

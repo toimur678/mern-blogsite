@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { blogCategories } from '../assets/assets'
 import { motion } from 'motion/react'
+import { Inbox } from 'lucide-react'
 import BlogCard from './BlogCard';
 import { useAppContext } from '../context/AppContext';
 
@@ -69,8 +70,8 @@ const BlogList = () => {
       {/* Empty State */}
       {displayedBlogs.length === 0 && (
         <div className='text-center py-20 bg-white/20 backdrop-blur-md rounded-[32px] border border-white/30 mt-10'>
-          <div className='w-20 h-20 mx-auto bg-white/50 rounded-full flex items-center justify-center mb-6 shadow-sm'>
-            <span className='text-3xl'>📭</span>
+          <div className='w-20 h-20 mx-auto bg-white/50 rounded-full flex items-center justify-center mb-6 shadow-sm text-navy/50'>
+            <Inbox className='w-8 h-8' />
           </div>
           <p className='text-xl text-navy font-bold'>No stories found</p>
           <p className='text-base text-navy/60 mt-3'>Try adjusting your search or category filter</p>

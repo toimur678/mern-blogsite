@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div className='max-w-sm'>
             <h2 className='font-heading text-2xl font-bold text-white mb-4'>
-              Tech<span className='text-teal-highlight'>Everyday</span>
+              LittleTech<span className='text-teal-highlight'>Tips</span>
             </h2>
             <p className='text-white/50 text-base leading-7'>
               Your daily dose of insights on technology, startups, lifestyle, and finance. Read, learn, and grow with us.
@@ -42,7 +42,7 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className='py-6 flex flex-col sm:flex-row justify-between items-center gap-4'>
-          <p className='text-sm text-white/40'>© 2025 Tech Everyday. All rights reserved.</p>
+          <p className='text-sm text-white/40'>© 2025 Little Tech Tips. All rights reserved.</p>
           <div className='flex gap-6'>
             <a className='text-sm text-white/40 hover:text-teal-highlight transition-colors cursor-pointer' href="#">Privacy Policy</a>
             <a className='text-sm text-white/40 hover:text-teal-highlight transition-colors cursor-pointer' href="#">Terms of Service</a>

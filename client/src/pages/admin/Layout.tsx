@@ -3,18 +3,7 @@ import Sidebar from '../../components/admin/Sidebar';
 import { useAppContext } from '../../context/AppContext';
 
 const Layout = () => {
-  const { axios, setIsLoggedIn, setUserRole, navigate, userRole } = useAppContext()
-
-  const logout = async () => {
-    try {
-      await axios.post('/api/admin/logout')
-      setIsLoggedIn(false)
-      setUserRole(null)
-      navigate('/')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
+  const { navigate, userRole, logout } = useAppContext()
 
   return (
     <>
@@ -24,7 +13,7 @@ const Layout = () => {
           onClick={() => navigate('/')} 
           className='font-heading text-xl font-bold text-navy cursor-pointer select-none'
         >
-          Tech<span className='text-primary'>Everyday</span>
+          LittleTech<span className='text-primary'>Tips</span>
         </h1>
         <div className='flex items-center gap-4'>
           {userRole && (

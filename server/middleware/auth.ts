@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
 export interface AuthPayload {
+    id?: string
     email: string
-    role: 'admin' | 'editor'
+    name?: string
+    role: 'user' | 'admin' | 'editor'
     iat?: number
 }
 

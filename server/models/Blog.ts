@@ -19,6 +19,7 @@ export interface IBlog extends Document {
     category: string
     image: string
     isPublished: boolean
+    likes: Types.ObjectId[]
     createdAt: Date
     updatedAt: Date
 }
@@ -30,6 +31,7 @@ const blogSchema = new mongoose.Schema<IBlog>({
     category: {type: String, required: true},
     image: {type: String, required: true},
     isPublished: {type: Boolean, required: true},
+    likes: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
 }, {timestamps: true})
 
 const Blog = mongoose.model<IBlog>('blog', blogSchema)

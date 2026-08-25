@@ -97,6 +97,48 @@ export const addBlog = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
+export const editBlog = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params
+        const {title, subTitle, description, category, isPublished} = JSON.parse(req.body.blog)
+        const imageFile = req.file
+
+        const blog = await Blog.findById(id)
+        if (!blog) {
+            res.json({success: false, message: "Blog not found"})
+            return
+        }
+
+        const sanitizedDescription = sanitizeEditorData(description as EditorOutputData)
+
+        let image = blog.image
+        if (imageFile) {
+            const fileBuffer = fs.readFileSync(imageFile.path)
+            const response = await imagekit.upload({
+                file: fileBuffer,
+                fileName: imageFile.originalname,
+                folder: "/blogs"
+            })
+            image = imagekit.url({
+                path: response.filePath,
+                transformation: [{quality: 'auto'}, {format: 'webp'}, {width: '1280'}]
+            })
+        }
+
+        blog.title = title
+        blog.subTitle = subTitle
+        blog.description = sanitizedDescription
+        blog.category = category
+        blog.isPublished = isPublished
+        blog.image = image
+
+        await blog.save()
+        res.json({success: true, message: "Blog updated successfully"})
+    } catch(error) {
+        res.json({success: false, message: (error as Error).message})
+    }
+}
+
 export const getAllBlogs = async (_req: Request, res: Response): Promise<void> => {
     try {
         const blogs = await Blog.find({isPublished: true})
@@ -152,9 +194,17 @@ export const togglePublish = async (req: Request, res: Response): Promise<void> 
 
 export const addComment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { blog, name, content } = req.body
-        await Comment.create({blog, name, content})
-        res.json({success: true, message: "Comment added for review"})
+        const { blog, content } = req.body
+        const userId = req.user?.id
+        
+        if (!userId) {
+            res.json({success: false, message: "Must be logged in to comment"})
+            return
+        }
+        
+        const name = req.user?.name || "User"
+        await Comment.create({blog, user: userId, name, content, isApproved: false}) // requires admin approval
+        res.json({success: true, message: "Comment submitted for approval"})
     } catch (error) {
         res.json({success: false, message: (error as Error).message})
     }
@@ -163,8 +213,141 @@ export const addComment = async (req: Request, res: Response): Promise<void> => 
 export const getBlogComments = async (req: Request, res: Response): Promise<void> => {
     try {
         const { blogId } = req.body
-        const comments = await Comment.find({blog: blogId, isApproved: true}).sort({createdAt: -1})
+        const token = req.cookies?.token
+
+        let userId = null
+        if (token) {
+            try {
+                // Ignore typescript warnings here for importing jwt by using require
+                const jwt = require('jsonwebtoken')
+                const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any
+                userId = decoded.id
+            } catch (err) {}
+        }
+
+        const query: any = { blog: blogId }
+        if (userId) {
+            query.$or = [{ isApproved: true }, { user: userId }]
+        } else {
+            query.isApproved = true
+        }
+
+        const comments = await Comment.find(query).populate('user', 'name').sort({createdAt: -1})
         res.json({success: true, comments})
+    } catch (error) {
+        res.json({success: false, message: (error as Error).message})
+    }
+}
+
+export const editComment = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { commentId, content } = req.body
+        const userId = req.user?.id
+
+        if (!userId) {
+            res.json({success: false, message: "Not authorized"})
+            return
+        }
+
+        const comment = await Comment.findById(commentId)
+        if (!comment) {
+            res.json({success: false, message: "Comment not found"})
+            return
+        }
+
+        if (comment.user?.toString() !== userId) {
+            res.json({success: false, message: "Not authorized to edit this comment"})
+            return
+        }
+
+        comment.content = content
+        await comment.save()
+        res.json({success: true, message: "Comment updated"})
+    } catch (error) {
+        res.json({success: false, message: (error as Error).message})
+    }
+}
+
+export const deleteUserComment = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { commentId } = req.body
+        const userId = req.user?.id
+
+        if (!userId) {
+            res.json({success: false, message: "Not authorized"})
+            return
+        }
+
+        const comment = await Comment.findById(commentId)
+        if (!comment) {
+            res.json({success: false, message: "Comment not found"})
+            return
+        }
+
+        if (comment.user?.toString() !== userId) {
+            res.json({success: false, message: "Not authorized to delete this comment"})
+            return
+        }
+
+        await comment.deleteOne()
+        res.json({success: true, message: "Comment deleted"})
+    } catch (error) {
+        res.json({success: false, message: (error as Error).message})
+    }
+}
+
+export const likeBlog = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.body
+        const userId = req.user?.id
+        
+        if (!userId) {
+            res.json({success: false, message: "Must be logged in to like"})
+            return
+        }
+
+        const blog = await Blog.findById(id)
+        if (!blog) {
+            res.json({success: false, message: "Blog not found"})
+            return
+        }
+
+        if (blog.likes.includes(userId)) {
+            res.json({success: false, message: "Already liked"})
+            return
+        }
+
+        blog.likes.push(userId)
+        await blog.save()
+        res.json({success: true, message: "Blog liked"})
+    } catch (error) {
+        res.json({success: false, message: (error as Error).message})
+    }
+}
+
+export const unlikeBlog = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.body
+        const userId = req.user?.id
+
+        if (!userId) {
+            res.json({success: false, message: "Must be logged in to unlike"})
+            return
+        }
+
+        const blog = await Blog.findById(id)
+        if (!blog) {
+            res.json({success: false, message: "Blog not found"})
+            return
+        }
+
+        const index = blog.likes.indexOf(userId)
+        if (index > -1) {
+            blog.likes.splice(index, 1)
+            await blog.save()
+        }
+
+        res.json({success: true, message: "Blog unliked"})
     } catch (error) {
         res.json({success: false, message: (error as Error).message})
     }

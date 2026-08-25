@@ -6,7 +6,7 @@ const Loader = () => {
         <div className='absolute inset-0 rounded-full border-4 border-t-primary animate-spin'></div>
       </div>
       <p className='font-heading text-lg font-bold text-navy'>
-        Tech<span className='text-primary'>Everyday</span>
+        LittleTech<span className='text-primary'>Tips</span>
       </p>
     </div>
   )

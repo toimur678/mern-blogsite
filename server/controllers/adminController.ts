@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import Blog from '../models/Blog.js'
 import Comment from '../models/Comment.js'
+import User from '../models/User.js'
 
 export const adminLogin = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -105,6 +106,26 @@ export const approveCommentById = async (req: Request, res: Response): Promise<v
         const {id} = req.body
         await Comment.findByIdAndUpdate(id, {isApproved: true})
         res.json({success: true, message: "Comment approved successfully"})
+    } catch (error) {
+        res.json({success: false, message: (error as Error).message})
+    }
+}
+
+export const getAllUsers = async (_req: Request, res: Response): Promise<void> => {
+    try {
+        // Find all regular users (excluding admin/editor if they exist in DB)
+        const users = await User.find({ role: 'user' }).select('-password').sort({createdAt: -1}).lean()
+        
+        // For each user, fetch their comments
+        const usersWithComments = await Promise.all(users.map(async (user) => {
+            const comments = await Comment.find({ user: user._id }).sort({createdAt: -1})
+            return {
+                ...user,
+                comments
+            }
+        }))
+
+        res.json({success: true, users: usersWithComments})
     } catch (error) {
         res.json({success: false, message: (error as Error).message})
     }

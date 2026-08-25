@@ -1,5 +1,5 @@
 import express from 'express'
-import { adminLogin, adminLogout, approveCommentById, checkAuth, deleteCommentById, getAllBlogsAdmin, getAllComments, getDashboard } from '../controllers/adminController.js'
+import { adminLogin, adminLogout, approveCommentById, checkAuth, deleteCommentById, getAllBlogsAdmin, getAllComments, getDashboard, getAllUsers } from '../controllers/adminController.js'
 import auth from '../middleware/auth.js'
 import requireRole from '../middleware/rbac.js'
 
@@ -20,5 +20,6 @@ adminRouter.get("/comments", auth, requireRole('admin', 'editor'), getAllComment
 // Admin only
 adminRouter.post("/delete-comment", auth, requireRole('admin'), deleteCommentById)
 adminRouter.post("/approve-comment", auth, requireRole('admin'), approveCommentById)
+adminRouter.get("/users", auth, requireRole('admin'), getAllUsers)
 
 export default adminRouter

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, PlusCircle, List, MessageSquare } from 'lucide-react'
+import { Home, PlusCircle, List, MessageSquare, Users } from 'lucide-react'
 
 const Sidebar = () => {
   const linkClass = ({isActive}: {isActive: boolean}) => 
@@ -30,6 +30,11 @@ const Sidebar = () => {
       <NavLink className={linkClass} to='/admin/comments'>
         <MessageSquare className='min-w-4 w-5 h-5' />
         <p className='hidden md:inline-block'>Comments</p>
+      </NavLink>
+      
+      <NavLink className={linkClass} to='/admin/users'>
+        <Users className='min-w-4 w-5 h-5' />
+        <p className='hidden md:inline-block'>Users</p>
       </NavLink>
       
     </div>

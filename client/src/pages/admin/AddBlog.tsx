@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, FormEvent, ChangeEvent } from 'react'
+import { Sparkles } from 'lucide-react'
 import { assets, blogCategories } from '../../assets/assets'
 import EditorJS from '@editorjs/editorjs'
 import Header from '@editorjs/header'
@@ -151,7 +152,7 @@ const AddBlog = () => {
             <input 
               onChange={e => setTitle(e.target.value)} 
               value={title} 
-              className='w-full max-w-lg mt-2 h-[44px] bg-surface-input text-navy placeholder:text-navy/50 rounded-[10px] px-4 text-base outline-none focus:bg-surface focus:ring-2 focus:ring-primary transition-all' 
+              className='w-full mt-2 h-[44px] bg-surface-input text-navy placeholder:text-navy/50 rounded-[10px] px-4 text-base outline-none focus:bg-surface focus:ring-2 focus:ring-primary transition-all border border-border' 
               type="text" 
               placeholder='Type here' 
               required
@@ -163,7 +164,7 @@ const AddBlog = () => {
             <input 
               onChange={e => setSubTitle(e.target.value)} 
               value={subTitle} 
-              className='w-full max-w-lg mt-2 h-[44px] bg-surface-input text-navy placeholder:text-navy/50 rounded-[10px] px-4 text-base outline-none focus:bg-surface focus:ring-2 focus:ring-primary transition-all' 
+              className='w-full mt-2 h-[44px] bg-surface-input text-navy placeholder:text-navy/50 rounded-[10px] px-4 text-base outline-none focus:bg-surface focus:ring-2 focus:ring-primary transition-all border border-border' 
               type="text" 
               placeholder='Type here' 
               required
@@ -172,18 +173,18 @@ const AddBlog = () => {
 
           <div>
             <label className='text-sm font-medium text-navy'>Blog Description</label>
-            <div className='max-w-lg mt-2 relative'>
+            <div className='w-full mt-2 relative'>
               <div 
                 ref={editorRef} 
                 className='editorjs-container min-h-[300px] bg-surface-input rounded-[10px] border border-border px-4 py-3 focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface transition-all'
               />
               <button 
-                className='mt-2 text-xs text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary-dark transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed' 
+                className='mt-3 text-sm font-medium text-white bg-primary px-5 py-2 flex items-center gap-2 rounded-lg hover:bg-primary-dark transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm' 
                 type='button' 
                 onClick={generateContent}
                 disabled={isGenerating}
               >
-                {isGenerating ? 'Generating...' : 'Generate with AI'}
+                {isGenerating ? 'Generating...' : <><Sparkles className='w-4 h-4' /> Generate with AI</>}
               </button>
             </div>
           </div>
