@@ -1,45 +1,33 @@
-import { Outlet } from 'react-router-dom'
-import Sidebar from '../../components/admin/Sidebar';
-import { useAppContext } from '../../context/AppContext';
+import { useState } from 'react'
+import { Link, Outlet } from 'react-router-dom'
+import { ArrowUpRight, LogOut, Menu, X } from 'lucide-react'
+import Sidebar from '../../components/admin/Sidebar'
+import { useAppContext } from '../../context/AppContext'
+import '../../admin.css'
 
 const Layout = () => {
-  const { navigate, userRole, logout } = useAppContext()
-
+  const { userRole, userData, logout } = useAppContext()
+  const [menuOpen, setMenuOpen] = useState(false)
   return (
-    <>
+    <div className="cms-app">
       {/* Admin Header */}
-      <div className='flex items-center justify-between h-[70px] px-4 sm:px-12 border-b border-border bg-surface'>
-        <h1 
-          onClick={() => navigate('/')} 
-          className='font-heading text-xl font-bold text-navy cursor-pointer select-none'
-        >
-          LittleTech<span className='text-primary'>Tips</span>
-        </h1>
-        <div className='flex items-center gap-4'>
-          {userRole && (
-            <span className={`text-xs font-semibold uppercase px-3 py-1.5 rounded-md ${
-              userRole === 'admin' 
-                ? 'bg-surface-teal text-primary' 
-                : 'bg-surface-peach text-accent'
-            }`}>
-              {userRole}
-            </span>
-          )}
-          <button 
-            onClick={logout} 
-            className='text-sm px-6 py-2.5 bg-primary text-white font-semibold rounded-lg cursor-pointer hover:bg-primary-dark transition-colors'
-          >
-            Logout
-          </button>
+      <header className="cms-header">
+        <div className="cms-header-brand">
+          <button className="cms-icon-button cms-menu-toggle" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
+          <Link to="/" className="cms-wordmark">folio<span>.</span></Link><span className="cms-studio-label">Editorial studio</span>
         </div>
+        <div className="cms-header-actions">
+          <Link to="/" className="cms-public-link">View publication <ArrowUpRight size={15} /></Link><span className="cms-header-divider" />
+          <div className="cms-account"><span className="cms-avatar">{(userData?.name || userRole || 'E').charAt(0).toUpperCase()}</span><span><strong>{userData?.name || 'Editorial team'}</strong><small>{userRole}</small></span></div>
+          <button onClick={() => void logout()} className="cms-icon-button" aria-label="Sign out" title="Sign out"><LogOut size={17} /></button>
+        </div>
+      </header>
+      <div className="cms-workspace">
+        {menuOpen && <button className="cms-sidebar-backdrop" aria-label="Close navigation" onClick={() => setMenuOpen(false)} />}
+        <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} />
+        <main id="main-content" className="cms-main" tabIndex={-1}><Outlet /></main>
       </div>
-
-      <div className='flex h-[calc(100vh-70px)]'>
-        <Sidebar/>
-        <Outlet/>
-      </div>
-    </>
+    </div>
   )
 }
-
 export default Layout

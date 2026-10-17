@@ -1,94 +1,22 @@
-import {toast} from 'react-hot-toast'
-import { Check, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
+import { Check, LoaderCircle, Trash2 } from 'lucide-react'
 import { useAppContext } from '../../context/AppContext'
-import { CommentData } from '../../assets/assets'
+import type { CommentData } from '../../assets/assets'
+import { errorMessage, formatDate } from '../../lib/format'
 
-interface CommentTableItemProps {
-  comment: CommentData
-  fetchComments: () => Promise<void>
-  index: number
-}
-
-const CommentTableItem = ({comment, fetchComments}: CommentTableItemProps) => {
-  
-  const {blog, createdAt, _id} = comment
-  const BlogDate = new Date(createdAt)
-
-  const {axios, userRole} = useAppContext()
-  const approveComment = async () => {
-    try {
-      const {data} = await axios.post('/api/admin/approve-comment', {id: _id})
-      if(data.success) {
-        toast.success(data.message)
-        fetchComments()
-      } else {
-        toast.error(data.message)
-      }
-    } catch (error) {
-      toast.error((error as Error).message)
-    }
+interface CommentTableItemProps { comment: CommentData; fetchComments: () => Promise<void>; index: number }
+const CommentTableItem = ({ comment, fetchComments }: CommentTableItemProps) => {
+  const { axios, userRole } = useAppContext()
+  const [busy, setBusy] = useState(false)
+  const mutate = async (action: 'approve-comment' | 'delete-comment') => {
+    if (action === 'delete-comment' && !window.confirm('Permanently delete this comment?')) return
+    setBusy(true)
+    try { const { data } = await axios.post(`/api/admin/${action}`, { id: comment._id }); if (!data.success) throw new Error(data.message); toast.success(data.message); await fetchComments() } catch (error) { toast.error(errorMessage(error)) } finally { setBusy(false) }
   }
-
-  const deleteComment = async () => {
-    try {
-      const confirm = window.confirm("Are you sure you want to delete this comment?")
-      if(!confirm) return;
-      const {data} = await axios.post('/api/admin/delete-comment', {id: _id})
-      if(data.success) {
-        toast.success(data.message)
-        fetchComments()
-      } else {
-        toast.error(data.message)
-      }
-    } catch (error) {
-      toast.error((error as Error).message)
-    }
-  }
-
-  return (
-    <tr className='border-b border-border hover:bg-surface-teal/10 transition-colors'>
-      <td className='px-6 py-5'>
-        <div className='space-y-1.5'>
-          <p className='text-xs text-navy/50 font-medium uppercase tracking-wide'>Blog</p>
-          <p className='text-sm text-navy font-medium'>{blog.title}</p>
-          <p className='text-xs text-navy/50 font-medium uppercase tracking-wide mt-3'>Comment by {comment.name}</p>
-          <p className='text-sm text-[#333]'>{comment.content}</p>
-        </div>
-      </td>
-
-      <td className='px-6 py-5 max-sm:hidden text-[#333]/60 text-sm'>
-        {BlogDate.toLocaleDateString()}
-      </td>
-
-      <td className='px-6 py-5'>
-        <div className='inline-flex items-center gap-4'>
-            {/* Only admin can approve/delete comments */}
-            {userRole === 'admin' ? (
-              <>
-                {!comment.isApproved ? (
-                  <button onClick={approveComment} className='p-1.5 rounded-lg hover:bg-surface-teal text-primary/60 hover:text-primary transition-all cursor-pointer'>
-                    <Check className='w-5 h-5' />
-                  </button>
-                ) : (
-                  <span className='text-xs bg-surface-teal text-primary font-medium rounded-md px-3 py-1.5'>Approved</span> 
-                )}
-                <button onClick={deleteComment} className='p-1.5 rounded-lg hover:bg-red-50 text-[#333]/60 hover:text-red-500 transition-all cursor-pointer'>
-                  <Trash2 className='w-4 h-4' />
-                </button>
-              </>
-            ) : (
-              <span className={`text-xs font-medium rounded-md px-3 py-1.5 ${
-                comment.isApproved 
-                  ? 'bg-surface-teal text-primary' 
-                  : 'bg-accent/10 text-accent'
-              }`}>
-                {comment.isApproved ? 'Approved' : 'Pending'}
-              </span>
-            )}
-        </div>
-      </td>
-    </tr>
-  )
+  return <tr><td><div className="cms-comment-author"><span className="cms-avatar">{comment.name?.charAt(0).toUpperCase() || 'R'}</span><strong>{comment.name || 'Reader'}</strong><span className={`cms-status${comment.isApproved ? ' cms-status-published' : ''}`}><i />{comment.isApproved ? 'Approved' : 'Pending'}</span></div><p className="cms-comment-content">{comment.content}</p><p className="cms-comment-article">On <strong>{comment.blog?.title || 'Removed article'}</strong></p></td><td className="cms-date-cell">{formatDate(comment.createdAt)}</td><td><div className="cms-row-actions">
+    {/* Only admin can approve/delete comments */}
+    {userRole === 'admin' ? <>{!comment.isApproved && <button disabled={busy} className="cms-button cms-button-secondary cms-small-button" onClick={() => void mutate('approve-comment')}>{busy ? <LoaderCircle size={14} className="cms-spin" /> : <Check size={14} />}Approve</button>}<button disabled={busy} className="cms-icon-button cms-danger" aria-label={`Delete comment by ${comment.name}`} title="Delete comment" onClick={() => void mutate('delete-comment')}><Trash2 size={16} /></button></> : <span className="cms-muted">View only</span>}
+  </div></td></tr>
 }
-
 export default CommentTableItem

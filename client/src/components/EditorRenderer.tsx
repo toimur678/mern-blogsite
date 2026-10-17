@@ -1,7 +1,42 @@
+import { createElement, type ReactNode } from 'react'
 import { EditorOutputData } from '../assets/assets'
 
 interface EditorRendererProps {
   data: EditorOutputData
+}
+
+function inlineText(text: unknown): ReactNode {
+  if (typeof text !== 'string') return null
+  if (!/[<&]/.test(text)) return text
+  const parsed = new DOMParser().parseFromString(text, 'text/html')
+  const renderNode = (node: ChildNode, key: number): ReactNode => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent
+    if (!(node instanceof HTMLElement)) return null
+    const children = Array.from(node.childNodes).map(renderNode)
+    const tag = node.tagName.toLowerCase()
+    if (['script', 'style', 'iframe', 'object', 'svg'].includes(tag)) return null
+    if (['strong', 'b', 'em', 'i', 'code', 'u', 's', 'mark', 'br'].includes(tag)) {
+      return createElement(tag, { key }, tag === 'br' ? undefined : children)
+    }
+    if (tag === 'a') {
+      const href = node.getAttribute('href') || ''
+      if (/^(https?:\/\/|mailto:|\/(?!\/)|#)/i.test(href)) {
+        return <a key={key} href={href} rel="noopener noreferrer">{children}</a>
+      }
+    }
+    return <span key={key}>{children}</span>
+  }
+  return Array.from(parsed.body.childNodes).map(renderNode)
+}
+
+function listItems(items: unknown): ReactNode {
+  if (!Array.isArray(items)) return null
+  return items.map((item, index) => {
+    if (typeof item === 'string') return <li key={index}>{inlineText(item)}</li>
+    if (!item || typeof item !== 'object') return null
+    const entry = item as { content?: string; items?: unknown[] }
+    return <li key={index}>{inlineText(entry.content)}{entry.items?.length ? <ul>{listItems(entry.items)}</ul> : null}</li>
+  })
 }
 
 /**
@@ -9,81 +44,29 @@ interface EditorRendererProps {
  * No dangerouslySetInnerHTML — all content is rendered as text nodes.
  */
 const EditorRenderer = ({ data }: EditorRendererProps) => {
-  if (!data?.blocks) return null
+  if (!Array.isArray(data?.blocks)) return null
 
   return (
-    <div className="rich-text">
+    <div className="rich-text reader-prose">
       {data.blocks.map((block, index) => {
         const key = block.id || index
-
         switch (block.type) {
           case 'header': {
-            const level = (block.data.level as number) || 2
-            const text = (block.data.text as string) || ''
-            if (level === 1) return <h1 key={key}>{text}</h1>
-            if (level === 2) return <h2 key={key}>{text}</h2>
-            if (level === 3) return <h3 key={key}>{text}</h3>
-            if (level === 4) return <h4 key={key}>{text}</h4>
-            if (level === 5) return <h5 key={key}>{text}</h5>
-            return <h6 key={key}>{text}</h6>
+            const level = Math.min(6, Math.max(2, Number(block.data.level) || 2))
+            return createElement(`h${level}`, { key, id: `section-${index}` }, inlineText(block.data.text))
           }
-
-          case 'paragraph': {
-            const text = (block.data.text as string) || ''
-            return <p key={key}>{text}</p>
-          }
-
-          case 'list': {
-            const items = (block.data.items as string[]) || []
-            const style = block.data.style as string
-            if (style === 'ordered') {
-              return (
-                <ol key={key}>
-                  {items.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ol>
-              )
-            }
-            return (
-              <ul key={key}>
-                {items.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            )
-          }
-
-          case 'quote': {
-            const text = (block.data.text as string) || ''
-            const caption = (block.data.caption as string) || ''
-            return (
-              <blockquote key={key} className="border-l-4 border-primary pl-5 my-6 italic text-[#555]">
-                <p className="mb-2">{text}</p>
-                {caption && (
-                  <cite className="text-sm text-[#777] not-italic">— {caption}</cite>
-                )}
-              </blockquote>
-            )
-          }
-
-          case 'delimiter': {
-            return (
-              <hr key={key} className="my-8 border-0 h-px bg-border" />
-            )
-          }
-
-          case 'inlineCode': {
-            const text = (block.data.text as string) || ''
-            return (
-              <p key={key}>
-                <code className="bg-surface-input px-2 py-1 rounded text-sm font-mono text-primary-dark">
-                  {text}
-                </code>
-              </p>
-            )
-          }
-
+          case 'paragraph':
+            return <p key={key}>{inlineText(block.data.text)}</p>
+          case 'list':
+            return block.data.style === 'ordered'
+              ? <ol key={key}>{listItems(block.data.items)}</ol>
+              : <ul key={key}>{listItems(block.data.items)}</ul>
+          case 'quote':
+            return <blockquote key={key}><p>{inlineText(block.data.text)}</p>{typeof block.data.caption === 'string' && block.data.caption && <cite>{inlineText(block.data.caption)}</cite>}</blockquote>
+          case 'delimiter':
+            return <hr key={key} />
+          case 'inlineCode':
+            return <pre key={key}><code>{typeof block.data.text === 'string' ? block.data.text : ''}</code></pre>
           default:
             return null
         }

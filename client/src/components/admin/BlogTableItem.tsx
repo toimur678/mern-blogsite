@@ -1,86 +1,33 @@
-import { X, Edit3 } from 'lucide-react';
-import { useAppContext } from '../../context/AppContext';
-import toast from 'react-hot-toast';
-import { BlogData } from '../../assets/assets';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ArrowUpRight, Edit3, LoaderCircle, Trash2 } from 'lucide-react'
+import { useAppContext } from '../../context/AppContext'
+import toast from 'react-hot-toast'
+import type { BlogData } from '../../assets/assets'
+import { errorMessage, formatDate } from '../../lib/format'
 
-interface BlogTableItemProps {
-  blog: BlogData
-  fetchBlogs: () => Promise<void>
-  index: number
-}
-
-const BlogTableItem = ({blog, fetchBlogs, index}: BlogTableItemProps) => {
-  const navigate = useNavigate();
-  const { title, createdAt} = blog
-  const BlogDate = new Date(createdAt)
-
-  const {axios, userRole} = useAppContext()
-  const deleteBlog = async () => {
-    const confirm = window.confirm("Are you sure you want to delete this blog?")
-    if(!confirm) return;
+interface BlogTableItemProps { blog: BlogData; fetchBlogs: () => Promise<void>; index: number }
+const BlogTableItem = ({ blog, fetchBlogs }: BlogTableItemProps) => {
+  const { axios, userRole, refreshBlogs } = useAppContext()
+  const [busy, setBusy] = useState(false)
+  const mutate = async (action: 'delete' | 'toggle-publish') => {
+    if (action === 'delete' && !window.confirm(`Delete “${blog.title}”? This permanently removes the article and its comments.`)) return
+    setBusy(true)
     try {
-      const {data} = await axios.post('/api/blog/delete', {id: blog._id})
-      if(data.success) {
-        toast.success(data.message)
-        await fetchBlogs() 
-      } else {
-        toast.error(data.message)
-      }
-    } catch (error) {
-      toast.error((error as Error).message)
-    }
+      const { data } = await axios.post(`/api/blog/${action}`, { id: blog._id })
+      if (!data.success) throw new Error(data.message || 'Unable to update article.')
+      toast.success(data.message || 'Article updated')
+      await fetchBlogs()
+      await refreshBlogs()
+    } catch (error) { toast.error(errorMessage(error)) } finally { setBusy(false) }
   }
-
-  const togglePublish = async () => {
-    try {
-      const {data} = await axios.post('/api/blog/toggle-publish', {id: blog._id})
-      if(data.success) {
-        toast.success(data.message)
-        await fetchBlogs()
-      } else {
-        toast.error(data.message)
-      }
-    } catch (error) {
-      toast.error((error as Error).message)
-    }
-  }
-
-  return (
-    <tr className='border-b border-border hover:bg-surface-teal/10 transition-colors'>
-        <th className='px-4 py-4 xl:px-6 text-navy font-medium'>{ index }</th>
-        <td className='px-4 py-4 text-navy'>{ title }</td>
-        <td className='px-4 py-4 max-sm:hidden text-[#333]/60'>{BlogDate.toDateString()}</td>
-        <td className='px-4 py-4 max-sm:hidden'>
-            <span className={`text-xs font-medium px-3 py-1 rounded-md ${
-              blog.isPublished 
-                ? 'bg-surface-teal text-primary' 
-                : 'bg-accent/10 text-accent'
-            }`}>
-              {blog.isPublished ? 'Published': 'Draft'}
-            </span>
-        </td>
-
-        <td className='px-4 py-4 flex items-center text-xs gap-3'>
-            <button 
-              onClick={togglePublish} 
-              className='px-3 py-1.5 rounded-lg border border-border text-[#333] hover:border-primary hover:text-primary transition-colors cursor-pointer'
-            >
-              {blog.isPublished ? 'Unpublish': 'Publish'}
-            </button>
-            <button onClick={() => navigate('/admin/editBlog/' + blog._id)} className='p-1.5 rounded-lg hover:bg-surface-teal text-[#333]/60 hover:text-primary transition-all cursor-pointer'>
-              <Edit3 className='w-5 h-5' />
-            </button>
-            {/* Only admin can delete blogs */}
-            {userRole === 'admin' && (
-              <button onClick={deleteBlog} className='p-1.5 rounded-lg hover:bg-red-50 text-[#333]/60 hover:text-red-500 transition-all cursor-pointer'>
-                <X className='w-5 h-5' />
-              </button>
-            )}
-        </td>
-      
-    </tr>
-  )
+  return <tr>
+    <td><div className="cms-article-cell">{blog.image ? <img className="cms-article-thumbnail" src={blog.image} alt="" loading="lazy" /> : <div className="cms-article-thumbnail cms-thumbnail-empty">f.</div>}<div><Link className="cms-article-title" to={`/admin/editBlog/${blog._id}`}>{blog.title}</Link><span className="cms-article-subtitle">{blog.subTitle || 'No excerpt added'}</span></div></div></td>
+    <td><span className="cms-category">{blog.category}</span></td><td><span className={`cms-status${blog.isPublished ? ' cms-status-published' : ''}`}><i />{blog.isPublished ? 'Published' : 'Draft'}</span></td><td className="cms-date-cell">{formatDate(blog.createdAt)}</td>
+    <td><div className="cms-row-actions"><button disabled={busy} className="cms-text-button cms-publish-action" onClick={() => void mutate('toggle-publish')}>{busy ? <LoaderCircle size={15} className="cms-spin" /> : blog.isPublished ? 'Unpublish' : 'Publish'}</button><Link to={`/admin/editBlog/${blog._id}`} className="cms-icon-button" aria-label={`Edit ${blog.title}`} title="Edit article"><Edit3 size={16} /></Link>{blog.isPublished && <Link to={`/blog/${blog._id}`} className="cms-icon-button" aria-label={`View ${blog.title}`} title="View article"><ArrowUpRight size={16} /></Link>}
+      {/* Only admin can delete blogs */}
+      {userRole === 'admin' && <button disabled={busy} onClick={() => void mutate('delete')} className="cms-icon-button cms-danger" aria-label={`Delete ${blog.title}`} title="Delete article"><Trash2 size={15} /></button>}
+    </div></td>
+  </tr>
 }
-
 export default BlogTableItem

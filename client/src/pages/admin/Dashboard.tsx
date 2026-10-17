@@ -1,100 +1,44 @@
-import { useEffect, useState } from 'react'
-import { FileText, MessageCircle, FilePen, Clock } from 'lucide-react'
-import BlogTableItem from '../../components/admin/BlogTableItem';
-import { useAppContext } from '../../context/AppContext';
-import toast from 'react-hot-toast';
-import { DashboardData } from '../../assets/assets';
+import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, ArrowUpRight, BookOpen, FilePenLine, MessageSquare, Plus, Users } from 'lucide-react'
+import BlogTableItem from '../../components/admin/BlogTableItem'
+import { CmsEmpty, CmsError, CmsLoading, CmsPageHeading } from '../../components/admin/CmsUI'
+import { useAppContext } from '../../context/AppContext'
+import type { DashboardData } from '../../assets/assets'
+import { errorMessage } from '../../lib/format'
 
+type StudioDashboard = DashboardData & { published?: number; pendingComments?: number; users?: number; subscribers?: number; totalLikes?: number }
 const Dashboard = () => {
-    const [dashboardData, setDashboardData] = useState<DashboardData>({
-        blogs: 0,
-        comments: 0,
-        drafts: 0,
-        recentBlogs: []
-    })
-
-    const {axios} = useAppContext()
-
-
-    const fetchDashboard = async () => {
-        try {
-            const {data} = await axios.get('/api/admin/dashboard')         
-            data.success ? setDashboardData(data.dashboardData) : toast.error(data.message)
-        } catch (error) {
-            toast.error((error as Error).message)
-        }
-    }
-
-    useEffect(() => {
-        fetchDashboard();
-    }, []);
-    
-    
-  return (
-    <div className='flex-1 p-6 sm:p-10 bg-surface-input overflow-y-auto'>
+  const { axios, userData, userRole } = useAppContext()
+  const [dashboardData, setDashboardData] = useState<StudioDashboard | null>(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const fetchDashboard = useCallback(async () => {
+    setError('')
+    try { const { data } = await axios.get('/api/admin/dashboard'); if (!data.success) throw new Error(data.message); setDashboardData(data.dashboardData) } catch (err) { setError(errorMessage(err)) } finally { setLoading(false) }
+  }, [axios])
+  useEffect(() => { void fetchDashboard() }, [fetchDashboard])
+  const published = dashboardData?.published ?? Math.max(0, (dashboardData?.blogs || 0) - (dashboardData?.drafts || 0))
+  const firstName = userData?.name?.split(' ')[0]
+  const stats = [
+    { label: 'Total articles', value: dashboardData?.blogs || 0, caption: `${published} live on your publication`, icon: BookOpen, to: '/admin/listBlog' },
+    { label: 'In the works', value: dashboardData?.drafts || 0, caption: 'Drafts ready for your next edit', icon: FilePenLine, to: '/admin/listBlog' },
+    { label: 'Conversations', value: dashboardData?.comments || 0, caption: `${dashboardData?.pendingComments || 0} awaiting a little attention`, icon: MessageSquare, to: '/admin/comments' },
+    { label: 'Subscribers', value: dashboardData?.subscribers || 0, caption: 'Readers who want to stay close', icon: Users, to: userRole === 'admin' ? '/admin/subscribers' : '/'  },
+  ]
+  return <section className="cms-page">
+    <CmsPageHeading eyebrow="Your publication at a glance" title={firstName ? `Welcome back, ${firstName}.` : 'A good day to tell a story.'} description="A quiet place to create, publish, and grow your perspective."><Link to="/admin/addBlog" className="cms-button cms-button-primary"><Plus size={16} />Write an article</Link></CmsPageHeading>
+    {error && <CmsError message={error} retry={() => void fetchDashboard()} />}
+    {loading ? <CmsLoading /> : dashboardData && <>
       {/* Stats Cards */}
-      <div className='flex flex-wrap gap-5'>
-        
-        <div className='flex items-center bg-surface gap-4 p-5 min-w-[220px] rounded-xl cursor-pointer hover:-translate-y-0.5 transition-all shadow-card'>
-            <div className='w-12 h-12 rounded-xl bg-surface-teal flex items-center justify-center'>
-              <FileText className='w-6 h-6 text-primary' />
-            </div>
-            <div>
-                <p className='text-2xl font-bold text-navy'>{dashboardData.blogs}</p>
-                <p className='text-sm text-[#333]/60 font-medium'>Blogs</p>
-            </div>
-        </div>
-        
-        <div className='flex items-center bg-surface gap-4 p-5 min-w-[220px] rounded-xl cursor-pointer hover:-translate-y-0.5 transition-all shadow-card'>
-            <div className='w-12 h-12 rounded-xl bg-surface-teal flex items-center justify-center'>
-              <MessageCircle className='w-6 h-6 text-primary' />
-            </div>
-            <div>
-                <p className='text-2xl font-bold text-navy'>{dashboardData.comments}</p>
-                <p className='text-sm text-[#333]/60 font-medium'>Comments</p>
-            </div>
-        </div>
-
-        <div className='flex items-center bg-surface gap-4 p-5 min-w-[220px] rounded-xl cursor-pointer hover:-translate-y-0.5 transition-all shadow-card'>
-            <div className='w-12 h-12 rounded-xl bg-surface-teal flex items-center justify-center'>
-              <FilePen className='w-6 h-6 text-primary' />
-            </div>
-            <div>
-                <p className='text-2xl font-bold text-navy'>{dashboardData.drafts}</p>
-                <p className='text-sm text-[#333]/60 font-medium'>Drafts</p>
-            </div>
-        </div>
-      </div>
-
+      <div className="cms-stats">{stats.map(({ label, value, caption, icon: Icon, to }) => <Link key={label} to={to} className="cms-stat"><div className="cms-stat-label">{label}<Icon size={17} strokeWidth={1.5} /></div><strong>{value.toLocaleString()}</strong><p>{caption}</p></Link>)}</div>
+      <div className="cms-dashboard-grid"><div className="cms-dashboard-primary">
         {/* Recent Blogs Table */}
-        <div className='mt-8'>
-            <div className='flex items-center gap-3 mb-4'>
-                <Clock className='w-5 h-5 text-primary' />
-                <h3 className='font-heading text-lg font-bold text-navy'>Latest Blogs</h3>
-            </div>
-
-            <div className='relative max-w-5xl overflow-x-auto rounded-xl bg-surface shadow-card'>
-                <table className='w-full text-sm text-[#333]'>
-                    <thead className='text-xs text-navy/60 text-left uppercase border-b border-border'>
-                        <tr>
-                            <th scope='col' className='px-4 py-4 xl:px-6 font-semibold'> # </th>
-                            <th scope='col' className='px-4 py-4 font-semibold'> Blog Title </th>
-                            <th scope='col' className='px-4 py-4 max-sm:hidden font-semibold'> Date </th>
-                            <th scope='col' className='px-4 py-4 max-sm:hidden font-semibold'> Status </th>
-                            <th scope='col' className='px-4 py-4 font-semibold'> Actions </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {dashboardData.recentBlogs.map((blog, index) => {
-                            return <BlogTableItem key={blog._id} blog={blog} fetchBlogs={fetchDashboard} index={index + 1}/>
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </div>        
-        
-    </div>
-  )
+        <div className="cms-section-heading"><div><h2>Fresh from your desk</h2><p>Your most recent articles, all in one place.</p></div><Link to="/admin/listBlog" className="cms-inline-link">View all articles <ArrowRight size={15} /></Link></div>
+        <div className="cms-list-panel">{dashboardData.recentBlogs.length ? <div className="cms-table-scroll"><table className="cms-table cms-articles-table cms-recent-table"><thead><tr><th scope="col">Article</th><th scope="col">Category</th><th scope="col">Status</th><th scope="col">Created</th><th scope="col">Actions</th></tr></thead><tbody>{dashboardData.recentBlogs.map((blog, index) => <BlogTableItem key={blog._id} blog={blog} fetchBlogs={fetchDashboard} index={index + 1} />)}</tbody></table></div> : <CmsEmpty title="Your publication is a blank page." description="Every great publication starts with a first article."><Link to="/admin/addBlog" className="cms-button cms-button-secondary">Write your first story</Link></CmsEmpty>}</div>
+        <div className="cms-editorial-note"><span className="cms-note-mark">“</span><div><p>The best stories begin with noticing.</p><span>Make a little space for your next idea.</span></div><Link className="cms-icon-button" to="/admin/addBlog" aria-label="Start a new article"><ArrowUpRight size={20} /></Link></div>
+      </div><aside className="cms-dashboard-aside"><div className="cms-section-heading"><div><h2>The editorial desk</h2><p>A little care goes a long way.</p></div></div><div className="cms-desk-panel"><span className="cms-eyebrow">Next on your list</span><Link to="/admin/comments" className="cms-desk-item"><span className="cms-desk-icon"><MessageSquare size={18} /></span><div><strong>Join the conversation</strong><p>{dashboardData.pendingComments ? `${dashboardData.pendingComments} comments need your review.` : 'Keep thoughtful conversations going.'}</p></div><ArrowUpRight size={16} /></Link><Link to="/admin/listBlog" className="cms-desk-item"><span className="cms-desk-icon"><FilePenLine size={18} /></span><div><strong>Revisit a draft</strong><p>{dashboardData.drafts ? `${dashboardData.drafts} stories waiting in the wings.` : 'Your next idea deserves a first draft.'}</p></div><ArrowUpRight size={16} /></Link><div className="cms-publication-health"><div><span>Publication balance</span><strong>{dashboardData.blogs ? Math.round(published / dashboardData.blogs * 100) : 0}% published</strong></div><div className="cms-progress" role="progressbar" aria-label="Published articles" aria-valuenow={published} aria-valuemin={0} aria-valuemax={Math.max(1, dashboardData.blogs)}><span style={{ width: `${dashboardData.blogs ? published / dashboardData.blogs * 100 : 0}%` }} /></div><p>{published} published · {dashboardData.drafts} drafts</p></div></div><div className="cms-studio-card"><span className="cms-eyebrow">Your publication</span><h3>Good ideas.<br />Thoughtfully shared.</h3><p>See your stories as your readers do.</p><Link to="/">Open folio. <ArrowUpRight size={15} /></Link></div></aside></div>
+    </>}
+  </section>
 }
-
 export default Dashboard

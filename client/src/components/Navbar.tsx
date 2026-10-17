@@ -1,204 +1,69 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, X, Search, ArrowRight, Bookmark, ChevronDown } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
-import { Menu, X, ChevronDown, User as UserIcon } from 'lucide-react'
+import { initials } from '../lib/format'
 
 const Navbar = () => {
-  const { navigate, isLoggedIn, userRole, userData, logout } = useAppContext()
+  const { isLoggedIn, userRole, userData, logout, savedIds, demoMode } = useAppContext()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [showCategories, setShowCategories] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
-  
-  const categoryRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
-
-  // Categories list (example)
-  const categories = ['Technology', 'Startups', 'Lifestyle', 'Programming', 'Design']
 
   // Handle outside click for dropdowns
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
-        setShowCategories(false)
-      }
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setShowProfileMenu(false)
-      }
+    const close = (event: MouseEvent) => {
+      if (!profileRef.current?.contains(event.target as Node)) setShowProfileMenu(false)
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMobileOpen(false); setShowProfileMenu(false) } }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', escape)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape) }
   }, [])
+  useEffect(() => { setMobileOpen(false); setShowProfileMenu(false) }, [location.pathname, location.search])
 
-  return (
-    <nav className='w-full bg-transparent relative' style={{ zIndex: 100 }}>
-      <div className='flex justify-between items-center py-[18px] px-8 sm:px-12 xl:px-0 max-w-[1280px] mx-auto h-[84px]'>
-        
-        {/* Logo */}
-        <div className='flex items-center gap-2'>
-          <h1 
-            onClick={() => navigate('/')} 
-            className='font-heading text-xl font-bold text-navy cursor-pointer select-none'
-          >
-            LittleTech<span className='text-primary'>Tips</span>
-          </h1>
-        </div>
-
-        {/* Desktop Nav Links */}
-        <div className='hidden md:flex items-center gap-1'>
-          <a onClick={() => navigate('/')} className='px-4 py-5 text-base font-normal text-navy cursor-pointer hover:text-primary transition-colors leading-[19.2px]'>Home</a>
-          <a onClick={() => navigate('/')} className='px-4 py-5 text-base font-normal text-navy cursor-pointer hover:text-primary transition-colors leading-[19.2px]'>Blog</a>
-          
-          <div className='relative' ref={categoryRef}>
-            <button 
-              onClick={() => setShowCategories(!showCategories)}
-              className='flex items-center gap-1 px-4 py-5 text-base font-normal text-navy cursor-pointer hover:text-primary transition-colors leading-[19.2px]'
-            >
-              Categories <ChevronDown size={16} className={`transition-transform ${showCategories ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {showCategories && (
-              <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-lg py-2 border border-border animate-fade-in'>
-                {categories.map((cat) => (
-                  <button 
-                    key={cat}
-                    onClick={() => {
-                      // Optionally add category filter logic here
-                      setShowCategories(false)
-                      navigate('/')
-                    }}
-                    className='w-full text-left px-4 py-2 text-navy hover:bg-surface-teal hover:text-primary transition-colors'
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Desktop — Join / Profile */}
-        <div className='hidden md:flex items-center'>
-          {!isLoggedIn ? (
-            <button 
-              onClick={() => navigate('/login')}
-              className='bg-primary text-white px-6 py-2.5 rounded-xl font-medium hover:bg-primary-dark transition-colors shadow-md hover:shadow-lg'
-            >
-              Join
-            </button>
-          ) : (
-            <div className='relative' ref={profileRef}>
-              <button 
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className='flex items-center gap-2 bg-surface-teal px-4 py-2 rounded-xl text-navy hover:bg-surface transition-colors border border-border'
-              >
-                <div className='w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary'>
-                  <UserIcon size={16} />
-                </div>
-                <span className='font-medium text-sm'>{userData?.name || 'Profile'}</span>
-              </button>
-
-              {showProfileMenu && (
-                <div className='absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 border border-border animate-fade-in'>
-                  <div className='px-4 py-2 border-b border-border mb-1'>
-                    <p className='text-sm font-medium text-navy truncate'>{userData?.name}</p>
-                    <p className='text-xs text-navy/60 truncate'>{userData?.email}</p>
-                  </div>
-                  
-                  <button 
-                    onClick={() => { setShowProfileMenu(false); navigate('/profile') }}
-                    className='w-full text-left px-4 py-2 text-sm text-navy hover:bg-surface-teal hover:text-primary transition-colors'
-                  >
-                    My Profile
-                  </button>
-                  
-                  {(userRole === 'admin' || userRole === 'editor') && (
-                    <button 
-                      onClick={() => { setShowProfileMenu(false); navigate('/admin') }}
-                      className='w-full text-left px-4 py-2 text-sm text-navy hover:bg-surface-teal hover:text-primary transition-colors'
-                    >
-                      Admin Panel
-                    </button>
-                  )}
-                  
-                  <button 
-                    onClick={() => { setShowProfileMenu(false); logout() }}
-                    className='w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors mt-1 border-t border-border pt-2'
-                  >
-                    Log Out
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Hamburger */}
-        <button 
-          onClick={() => setMobileOpen(!mobileOpen)} 
-          className='md:hidden p-2 text-navy cursor-pointer hover:text-primary transition-colors'
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+  return <header className='site-header'>
+    <div className='top-announcement'>
+      <div className='site-container top-announcement-inner'>
+        <p>Get weekly updates with our <a href='/#newsletter'>Newsletter</a>{demoMode && <span className='sample-label'>SAMPLE EDITION</span>}</p>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className='md:hidden bg-surface border-t border-border px-8 pb-6 absolute w-full left-0 z-50 shadow-xl'>
-          <a onClick={() => { navigate('/'); setMobileOpen(false) }} className='block py-3 text-base text-navy cursor-pointer hover:text-primary transition-colors'>Home</a>
-          <a onClick={() => { navigate('/'); setMobileOpen(false) }} className='block py-3 text-base text-navy cursor-pointer hover:text-primary transition-colors'>Blog</a>
-          
-          <div className='py-3'>
-            <p className='text-base text-navy font-medium mb-2'>Categories</p>
-            <div className='pl-4 space-y-2'>
-              {categories.map((cat) => (
-                <button 
-                  key={cat}
-                  onClick={() => setMobileOpen(false)}
-                  className='block w-full text-left text-sm text-navy/70 hover:text-primary transition-colors'
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <div className='border-t border-border mt-4 pt-4'>
-            {!isLoggedIn ? (
-              <button 
-                onClick={() => { navigate('/login'); setMobileOpen(false) }}
-                className='w-full bg-primary text-white px-4 py-3 rounded-xl font-medium hover:bg-primary-dark transition-colors'
-              >
-                Join Now
-              </button>
-            ) : (
-              <div className='space-y-2'>
-                <button 
-                  onClick={() => { navigate('/profile'); setMobileOpen(false) }}
-                  className='block w-full text-left py-2 text-navy hover:text-primary font-medium transition-colors'
-                >
-                  My Profile
-                </button>
-                {(userRole === 'admin' || userRole === 'editor') && (
-                  <button 
-                    onClick={() => { navigate('/admin'); setMobileOpen(false) }}
-                    className='block w-full text-left py-2 text-navy hover:text-primary transition-colors'
-                  >
-                    Admin Panel
-                  </button>
-                )}
-                <button 
-                  onClick={() => { logout(); setMobileOpen(false) }}
-                  className='block w-full text-left py-2 text-red-500 hover:text-red-600 transition-colors'
-                >
-                  Log Out
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
-  )
+    </div>
+    <div className='site-container nav-inner'>
+      {/* Logo */}
+      <Link className='wordmark' to='/' aria-label='Folio home'>folio<span>.</span></Link>
+      {/* Desktop Nav Links */}
+      <nav className='desktop-nav' aria-label='Main navigation'>
+        <NavLink to='/' end className={({ isActive }) => isActive && !location.hash ? 'nav-link active' : 'nav-link'}>Home</NavLink>
+        <a className={`nav-link ${location.hash === '#stories' ? 'active' : ''}`} href='/#stories'>Articles</a>
+        <a className={`nav-link ${location.hash === '#categories' ? 'active' : ''}`} href='/#categories'>Categories</a>
+        <NavLink className='nav-link' to='/about'>About</NavLink>
+        <NavLink className='nav-link' to='/saved'>Reading list</NavLink>
+      </nav>
+      {/* Desktop — Join / Profile */}
+      <div className='nav-actions'>
+        <button className='icon-button nav-search' aria-label='Search stories' onClick={() => navigate('/?search=open#stories')}><Search size={18}/></button>
+        <Link className='nav-saved-pill' to='/saved' aria-label={`Saved stories (${savedIds.length})`}><Bookmark size={15}/><span>Saved ({savedIds.length})</span></Link>
+        <Link className='nav-saved icon-button' to='/saved' aria-label='Saved stories'><Bookmark size={18}/></Link>
+        <span className='nav-divider'/>
+        {isLoggedIn ? <div className='profile-menu' ref={profileRef}>
+          <button className='profile-trigger' onClick={() => setShowProfileMenu(value => !value)} aria-expanded={showProfileMenu} aria-controls='account-menu'><span className='avatar'>{initials(userData?.name || 'Reader')}</span><ChevronDown size={13}/></button>
+          {showProfileMenu && <div id='account-menu' className='account-dropdown'>
+            <span className='account-name'>{userData?.name}</span>
+            <Link to='/profile'>Your account</Link><Link to='/saved'>Saved stories</Link>
+            {(userRole === 'admin' || userRole === 'editor') && <Link to='/admin'>Editorial studio</Link>}
+            <button onClick={() => void logout()}>Sign out</button>
+          </div>}
+        </div> : <Link className='sign-in-link' to='/login'>Sign in</Link>}
+        <a className='button button-dark nav-subscribe' href='/#newsletter'>Subscribe <ArrowRight size={15}/></a>
+        {/* Mobile Hamburger */}
+        <button className='icon-button mobile-toggle' onClick={() => setMobileOpen(value => !value)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls='mobile-navigation'>{mobileOpen ? <X size={22}/> : <Menu size={22}/>}</button>
+      </div>
+    </div>
+    {/* Mobile Menu */}
+    {mobileOpen && <nav id='mobile-navigation' className='mobile-navigation' aria-label='Mobile navigation'><Link to='/'>Home</Link><a href='/#stories' onClick={() => setMobileOpen(false)}>Articles</a><a href='/#categories' onClick={() => setMobileOpen(false)}>Categories</a><Link to='/about'>About</Link><Link to='/saved'>Saved ({savedIds.length})</Link>{!isLoggedIn && <Link to='/login'>Sign in</Link>}<a href='/#newsletter' onClick={() => setMobileOpen(false)}>Subscribe to the newsletter <ArrowRight size={16}/></a></nav>}
+  </header>
 }
-
 export default Navbar
+

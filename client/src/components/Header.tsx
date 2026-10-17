@@ -1,82 +1,51 @@
-import { useRef, FormEvent } from 'react'
+import { ArrowRight, Bookmark, Compass } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
+import { authorName, formatDate, readingTime } from '../lib/format'
 
 const Header = () => {
-  const { setInput, input } = useAppContext()
-  const inputRef = useRef<HTMLInputElement>(null)
+  const { blogs, blogsLoading, savedIds, toggleSaved, demoMode } = useAppContext()
+  const primary = blogs.find(blog => blog.featured) || blogs[0]
+  const rest = blogs.filter(blog => blog._id !== primary?._id)
+  const showcase = primary ? (rest.length >= 2 ? [rest[0], primary, rest[1]] : [primary, ...rest.slice(0, 2)]) : []
 
-  const onSubmitHandler = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (inputRef.current) {
-      setInput(inputRef.current.value)
-    }
-  }
-
-  const onClear = async () => {
-    setInput('')
-    if (inputRef.current) {
-      inputRef.current.value = ''
-    }
-  }
-
-  return (
-    <section className='bg-surface-teal overflow-hidden'>
-      <div className='max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center'>
-        
-        {/* Hero Content */}
-        <div className='max-w-2xl'>
-          <p className='text-primary font-semibold text-sm tracking-[2px] uppercase mb-3'>BLOG</p>
-          
-          <h1 className='font-heading text-[36px] sm:text-[52px] font-medium leading-[1.08] text-navy mb-4'>
-            Our ideas and insights on{' '}
-            <span className='text-primary'>technology, startups,</span>{' '}
-            lifestyle, and much more.
-          </h1>
-
-          <p className='text-lg text-[#333333] leading-[28px] mb-6'>
-            This is your space to think out loud, to share what matters, and to write without filters.
-          </p>
-
-          {/* Search */}
-          <form onSubmit={onSubmitHandler} className='max-w-xl'>
-            <div className='relative'>
-              <input 
-                ref={inputRef} 
-                className='w-full h-12 bg-surface-input text-navy placeholder:text-navy/50 rounded-[10px] px-5 pr-14 text-base outline-none focus:bg-surface focus:ring-2 focus:ring-primary transition-all' 
-                type="text" 
-                placeholder='Search Blogs' 
-                required 
-              />
-              <button 
-                type='submit' 
-                className='absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors cursor-pointer'
-              >
-                Search
-              </button>
+  return <section className='site-container journal-header'>
+    <div className='journal-intro'>
+      <p className='eyebrow'><span className='status-dot'/> AN INDEPENDENT JOURNAL{demoMode && <span className='sample-label'>SAMPLE EDITION</span>}</p>
+      <h1>Explore the world’s<br/><em>most considered stories</em></h1>
+    </div>
+    {blogsLoading ? <div className='hero-showcase hero-showcase-loading' aria-label='Loading featured stories'>
+      <div className='feature-skeleton skeleton'/>
+      <div className='feature-skeleton skeleton'/>
+      <div className='feature-skeleton skeleton'/>
+    </div> : showcase.length > 0 && <div className={`hero-showcase ${showcase.length < 3 ? 'hero-showcase-compact' : ''}`}>
+      {showcase.map(story => {
+        const isPrimary = story._id === primary?._id
+        const saved = savedIds.includes(story._id)
+        return <article key={story._id} className={`hero-card ${isPrimary ? 'hero-card-center' : ''}`}>
+          <div className='hero-card-media'>
+            <Link to={`/blog/${story._id}`} className='hero-image-link'>
+              <img className='hero-image' src={story.image} alt={story.title} fetchPriority={isPrimary ? 'high' : 'auto'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/images/quiet-spaces.jpg' }}/>
+            </Link>
+            <Link to={`/?category=${encodeURIComponent(story.category)}#stories`} className='card-category-pill'>{story.category}</Link>
+            <span className='card-floating-meta'><Compass size={12}/> {isPrimary ? 'Editor’s pick' : authorName(story)}</span>
+          </div>
+          <div className='hero-card-body'>
+            <div className='story-meta'>
+              <span>{formatDate(story.publishedAt || story.createdAt)}</span>
+              <span className='meta-dot'>•</span>
+              <span>{readingTime(story)} min read</span>
             </div>
-          </form>
-
-          {input && (
-            <button 
-              onClick={onClear} 
-              className='mt-3 text-sm text-primary font-medium hover:text-primary-dark transition-colors cursor-pointer text-left block'
-            >
-              ✕ Clear Search
-            </button>
-          )}
-        </div>
-
-        {/* Hero Image */}
-        <div className='relative w-full h-full min-h-[300px] sm:min-h-[400px] rounded-2xl overflow-hidden shadow-2xl'>
-          <img 
-            src="/hero-bg.jpg" 
-            alt="Hero background" 
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </div>
-      </div>
-    </section>
-  )
+            <Link to={`/blog/${story._id}`} className='hero-card-title'><h2>{story.title}</h2></Link>
+            <div className='hero-card-footer'>
+              <Link className={`button ${isPrimary ? 'button-dark' : 'button-outline'} button-read`} to={`/blog/${story._id}`}>Read more <ArrowRight size={14}/></Link>
+              <button className={`icon-button bookmark-button ${saved ? 'is-saved' : ''}`} onClick={() => toggleSaved(story._id)} aria-label={saved ? `Unsave ${story.title}` : `Save ${story.title}`} aria-pressed={saved}><Bookmark size={17} fill={saved ? 'currentColor' : 'none'}/></button>
+            </div>
+          </div>
+        </article>
+      })}
+    </div>}
+  </section>
 }
-
 export default Header
+

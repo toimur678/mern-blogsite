@@ -1,31 +1,37 @@
+import { useState, type FormEvent } from 'react'
+import { ArrowRight, Check } from 'lucide-react'
+import { useAppContext } from '../context/AppContext'
+import { errorMessage } from '../lib/format'
+
 const Newsletter = () => {
-  return (
-    <section className='bg-surface-teal'>
-      <div className='max-w-[1280px] mx-auto px-8 sm:px-12 xl:px-0 py-[76px] sm:py-[100px] text-center'>
-        <h2 className='font-heading text-2xl sm:text-[40px] font-bold text-navy leading-[48px] mb-4'>
-          Never Miss a Blog!
-        </h2>
-        <p className='text-lg text-[#333333] leading-[28px] max-w-lg mx-auto mb-10'>
-          Subscribe to get the latest blog, new tech, and exclusive news delivered right to your inbox.
-        </p>
-
-        <form className='flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto'>
-          <input 
-            type="email" 
-            className='w-full sm:flex-1 h-[52px] bg-surface-input text-navy placeholder:text-navy/50 rounded-[10px] px-5 text-base outline-none focus:bg-surface focus:ring-2 focus:ring-primary transition-all' 
-            placeholder='Enter your email' 
-            required
-          />
-          <button 
-            type='submit' 
-            className='w-full sm:w-auto px-10 h-[52px] bg-accent text-white font-semibold text-base rounded-lg hover:bg-accent-dark transition-colors cursor-pointer'
-          >
-            Subscribe
-          </button>
-        </form>
+  const { axios, demoMode } = useAppContext()
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
+  const subscribe = async (event: FormEvent) => {
+    event.preventDefault()
+    setError('')
+    if (demoMode) { setError('Subscriptions are unavailable in this sample edition. Your email has not been saved.'); return }
+    setBusy(true)
+    try {
+      const { data } = await axios.post('/api/newsletter/subscribe', { email: email.trim() })
+      if (!data.success) throw new Error(data.message)
+      setSuccess(true)
+    } catch (failure) { setError(errorMessage(failure)) } finally { setBusy(false) }
+  }
+  return <section className='site-container newsletter-section' id='newsletter'>
+    <div className='newsletter-inner'>
+      <div className='newsletter-copy'>
+        <p className='eyebrow'>THE FOLIO LETTER</p>
+        <h2>Subscribe to our newsletter and<br/><em>stay updated each week</em></h2>
+        <p>Regular updates ensure that readers have access to fresh perspectives — a quieter corner of your inbox.</p>
       </div>
-    </section>
-  )
+      <div className='newsletter-signup'>
+        {success ? <div className='newsletter-success' role='status'><span><Check size={22}/></span><h3>You're on the list.</h3><p>Thanks for making room for a little perspective.</p></div> : <form onSubmit={subscribe}><label className='sr-only' htmlFor='newsletter-email'>Your email address</label><div className='newsletter-input-row'><input id='newsletter-email' type='email' autoComplete='email' value={email} onChange={event => setEmail(event.target.value)} required placeholder='Email address' maxLength={254} aria-describedby='newsletter-note newsletter-error'/><button className='button button-dark' disabled={busy}>{busy ? 'Joining…' : 'Submit now'} <ArrowRight size={15}/></button></div><p id='newsletter-note' className='newsletter-note'>Good reads. No noise. Unsubscribe whenever you like.</p>{error && <p id='newsletter-error' className='form-error' role='alert'>{error}</p>}</form>}
+      </div>
+    </div>
+  </section>
 }
-
 export default Newsletter
+
